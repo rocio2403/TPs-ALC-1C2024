@@ -1,7 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+Trabajo Práctico 1:
+Grupo : Susano y Valentin
+Integrantes: Ibarra, Abril Magalí, Dominguez, Rocio Julieta
+Materia: Algebra Lineal Computacional
+Periodo. Primer Cuatrimestre 2024
+"""
+
 import numpy as np
 import networkx as nx
-from scipy.linalg import solve_triangular
-
+from scipy.linalg import solve_triangular 
+import numpy.linalg as lng
+import matplotlib.pyplot as plt 
 
 def leer_archivo(input_file_path):
 
@@ -18,7 +28,7 @@ def leer_archivo(input_file_path):
     
     return W
 
-def dibujarGrafo(W, print_ejes=True):
+def dibujarGrafo(W,titulo=None, print_ejes=True,ax=None):
     
     options = {
     'node_color': 'yellow',
@@ -35,108 +45,113 @@ def dibujarGrafo(W, print_ejes=True):
     G = nx.relabel_nodes(G, {i:i+1 for i in range(N)})
     if print_ejes:
         print('Ejes: ', [e for e in G.edges])
+#Modificamos la funcion original para poder agrupar en un mismo grafo
+    if ax is None:
+        fig, ax = plt.subplots()
     
-    nx.draw(G, pos=nx.spring_layout(G), **options)
+    nx.draw(G, pos=nx.spring_layout(G), ax=ax, **options)
     
-#%%
+# Agregar título si se recibe como input
+    if titulo:
+        ax.set_title(titulo)
+
+
+#Implementamos la factorizacion LU 
+#Este codigo asume que no se necesitan permutaciones de filas
+
 def factorizacion_LU(A):
-    m=A.shape[0]  #Numero de filas
-    n=A.shape[1]   #Numero de columnas
-    matriz = A.copy() #Para no modificar la matriz original
+    m, n = A.shape
     
-    if m!=n:
+    #verificamos si la matriz es cuadrada
+    if m != n:
         print('Matriz no cuadrada, no es posible factorizar')
-        
-    else:
-        L = np.eye(n) #inicializamos L
-        for k in range(n-1):
-            pivote = matriz[k][k]    #Tomamos un pivote
-            # print('--------------------')
-            # print(pivote)
+        return None, None
     
-            for f in range(k+1, n):   #Iteramos sobre esa columna
-                coef = matriz[f][k] / pivote
-                L[f][k] = coef         #Guardamos coeficiente
-                for c in range(k, n):
-                    matriz[f][c] = matriz[f][c] + ((-coef)*matriz[k][c]) #Actualizamos los demas nros de la matriz
-                    
-        U = matriz #Guardamos como u, la matriz triangulada
+    L = np.eye(n) #iniciamos L
+    U = A.copy() #U será la matriz A, triangulada
+    
+    for k in range(n-1): #iteramos sobre las columnas
+        pivote = U[k, k]  #elegimos el pivote siempre como el elemento diagonal 
+        for f in range(k+1, n):
+            coef = U[f, k] / pivote  #guardamos el coeficiente utilizado para triangular
+            L[f, k] = coef #lo colocamos debidamente en L
+            U[f, k:] -= coef * U[k, k:] #actualizamos los demás elementos de U
+            
     return L, U
 
+# Comenzamos con el calculo de PageRank
+
+
 def calcular_grado(matriz,i):
-    res =  np.sum(matriz[:, i])
-    return res
+    return np.sum(matriz[:, i]) #El grado de una pagina serán la suma de sus links
 
 def componentes_Pagerank(W, p):
     """
     Dada una matriz de conectividad W y una probabilidad p,
     calcula las componentes de la ecuación 6.
     """
-    n = W.shape[0] #Cantidad de páginas
-    #creamos e
-    e = np.ones((n,1)) #Vector columna de unos
-    #creamos D (matriz diagonal con djj = 1/cj o 0 ) 
-    #para eso calculamos cj (grado de la página j: cantidad de links salientes de j)
-    D = np.eye(n)
-    for i in range(len(D)):
-        if calcular_grado(W, i) == 0:
-           D[i][i]=0
-        else:
-          D[i][i] = 1 / calcular_grado(W, i)  #el grado es la suma sobre la columna
-        
-    #creamos z y luego trasponemos
+    n = W.shape[0] 
+    e = np.ones((n, 1))
+    D = np.zeros((n, n))
     
-    z = np.zeros((n,1)) #Vector columna  
-    for j in range(n):
-        if calcular_grado(W, j) == 0:
-            z[j] = 1/n
-        else:
-            z[j] = (1-p)/n
-    #ahora trasponemos z
-    z_t =  np.transpose(z)
+    for i in range(n):
+        grado = calcular_grado(W, i)
+        if grado != 0:
+            D[i][i]= 1 / grado
+
+    z = np.where(np.sum(W, axis=0) == 0, 1/n, (1-p)/n)
+    z_t = z.T 
     return p, W, e, D, z_t
 
 
-#%%
-def calcularPuntajes(w,p):
-    p, W, e, D, z_t = componentes_Pagerank(w, p)
-    #resolvemos la ecuacion 6
-    #para eso podemos armar la matriz con los datos obtenidos
-    #Luego hacer factorizacion LU
-    #resolver el sistema con L y = b , U X = y
-    #así obtenemos x, ya que asumimos que gamma(?es 1
-    #por lo que nuestro sistema queda :
-    #  (I - PWD)X = e
-    #Por lo cual buscamos la matriz I-PWD
+#calculamos los puntajes (score) resolviendo ecuacion 6
+#implementando la descomposicion LU
+def calcularPuntajes(W,p):
+    p, W, e, D, z_t = componentes_Pagerank(W, p)
     identidad = np.eye(W.shape[0])
     
-    A = p*(W@D) + (e@z_t)
-    M = identidad - p*(W@D)
+    if p != 0:
+        M = identidad - p * (W @ D)
+    else:
+        M = W @ D - identidad
+        if (lng.det(M) == 0):
+            raise ValueError("R-I es singular. Hay infinitas soluciones")
+        e = np.zeros((W.shape[0], 1)) 
+    
     L, U = factorizacion_LU(M)
     
-    #resolvemos sistema ya que son matrices triangulares
     y = solve_triangular(L, e, lower=True)
     x = solve_triangular(U, y, lower=False)
+    if np.sum(x) == 0:
+        return x
+    return x / np.sum(x)
 
-    #normalizamos x
-    x = x/np.sum(x)
-
-    return x
-
-#%%
 
 def calcularRanking(M, p):
     npages = M.shape[0]
     rnk = np.arange(0, npages) # ind[k] = i, la pagina k tienen el iesimo orden en la lista.
     scr = np.zeros(npages) # scr[k] = alpha, la pagina k tiene un score de alpha 
     # Codigo
-    scr = calcularPuntajes(M, p).reshape(12,)
-    pagina_score = list(zip(range(npages), scr))
-    pagina_score.sort(key=lambda x: x[1], reverse=True)
-    for t in range(npages):
-        pagina = pagina_score[t][0]
-        rnk[pagina] = t+1        
+    x = calcularPuntajes(M, p)
+    scr = x
+    pagina_score = sorted(enumerate(x.flatten()), key=lambda x: x[1], reverse=True)
+    for t, (pagina, _) in enumerate(pagina_score):
+        rnk[pagina] = t + 1
     return rnk, scr 
+
+#En rnk, el indice + 1 (pues los indices comienzan en cero) es la pagina y
+# el elemento es la posicion que tiene en el ranking
+
+#La siguiente funcion, obtiene el numero de página que tuvo el mejor puntaje
+#Es decir, aquella que en el ranking tiene poscion  1
+def obtenerMejorPagina(M,p):
+    mejor_pagina = 0
+    rnk,scr = calcularRanking(M, p)
+    print('rnk:' ,rnk)
+    for i in range(len(rnk)):
+         if (rnk[i]==1):
+             mejor_pagina = i+1
+    return mejor_pagina
 
 def obtenerMaximoRankingScore(M, p):
     output = -np.inf
@@ -146,29 +161,25 @@ def obtenerMaximoRankingScore(M, p):
     
     return output
 
-    
-    
 #ARCHIVOS DE ENTRADA
 archivo_test = './tests/test_dosestrellas.txt'
 #CARGA DE ARCHIVO EN GRAFO
 W = leer_archivo(archivo_test)
+dibujarGrafo(W,titulo = 'Grafo Dos Estrellas', print_ejes=False)
 
-dibujarGrafo(W, print_ejes=False)
+#%%
 
 # defino la probabilidad de salto de continuar los links de la pagina actual
 p = 0.5
 
-
+print(obtenerMaximoRankingScore(W,p))
 # Realizo el test unitario para el calculo del mayor score, que pruebe que el codigo funciona correctamente.
 print('*'*50)
 print('Test unitario 1')
 try:
-    assert(np.isclose(obtenerMaximoRankingScore(W, p), 0.1811))
+    assert(np.isclose(int(obtenerMaximoRankingScore(W,p)*(10**4))/(10**4), 0.1811))
 except:
     print('OUCH!! - No paso el test unitario')
 else:
     print('BIEN! - Paso correctamente el test unitario')
 print('*'*50)
-    
-    
-    
