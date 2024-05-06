@@ -56,9 +56,11 @@ def dibujarGrafo(W,titulo=None, print_ejes=True,ax=None):
         ax.set_title(titulo)
 
 
-#Implementamos la factorizacion LU 
-#Este codigo asume que no se necesitan permutaciones de filas
-
+"""
+La siguiente funcion implementa la descomposicion LU de matrices.
+Toma como entrada una matriz A Y retorna dos matrices, L y U
+Esta funcion asume que no será necesario el intercambio de filas
+"""
 def factorizacion_LU(A):
     m, n = A.shape
     
@@ -81,15 +83,19 @@ def factorizacion_LU(A):
 
 # Comenzamos con el calculo de PageRank
 
-
+"""
+El grado de una pagina serán la suma de sus links
+Las paginas, son representadas por las columnas, por lo que sumamos por columna
+"""
 def calcular_grado(matriz,i):
-    return np.sum(matriz[:, i]) #El grado de una pagina serán la suma de sus links
+    return np.sum(matriz[:, i]) 
+
+"""
+    Dada una matriz de conectividad W y una probabilidad p,
+    calcula las componentes de la ecuación 6.    
+"""
 
 def componentes_Pagerank(W, p):
-    """
-    Dada una matriz de conectividad W y una probabilidad p,
-    calcula las componentes de la ecuación 6.
-    """
     n = W.shape[0] 
     e = np.ones((n, 1))
     D = np.zeros((n, n))
@@ -103,9 +109,14 @@ def componentes_Pagerank(W, p):
     z_t = z.T 
     return p, W, e, D, z_t
 
+"""
+La siguiente funcion calcula los puntajes (score) resolviendo la ecuacion 6
+Para ello toma una amtriz de conectividad y una probabilidad p
+Luego calcula los componentes necesarios con la funcion anterior y resuelve el sistema
+a traves de la factorizacion LU
+Finalmente normaliza el vector X solucion y lo retorna
+"""
 
-#calculamos los puntajes (score) resolviendo ecuacion 6
-#implementando la descomposicion LU
 def calcularPuntajes(W,p):
     p, W, e, D, z_t = componentes_Pagerank(W, p)
     identidad = np.eye(W.shape[0])
@@ -126,7 +137,13 @@ def calcularPuntajes(W,p):
         return x
     return x / np.sum(x)
 
+"""
+La siguiente funcion calcula el ranking, luego de obtener los puntajes con la uncion anterior
+recibe una matriz de conectividad w y una probabilidad p 
+De acuerdo al puntaje obtenido, separa y retorna dos listas, rnk, la cual contiene el puesto en el que quedo cad pagina del ranking,
+representandose estas con el indice en el que estan puestos más uno (la pagina uno, esta en el indice cero), y scr que contiene el score de cada pagina
 
+"""
 def calcularRanking(M, p):
     npages = M.shape[0]
     rnk = np.arange(0, npages) # ind[k] = i, la pagina k tienen el iesimo orden en la lista.
@@ -139,11 +156,10 @@ def calcularRanking(M, p):
         rnk[pagina] = t + 1
     return rnk, scr 
 
-#En rnk, el indice + 1 (pues los indices comienzan en cero) es la pagina y
-# el elemento es la posicion que tiene en el ranking
-
-#La siguiente funcion, obtiene el numero de página que tuvo el mejor puntaje
-#Es decir, aquella que en el ranking tiene poscion  1
+"""
+La siguiente funcion, obtiene el numero de página que tuvo el mejor puntaje
+Es decir, aquella que en el ranking tiene posicion  1
+"""
 def obtenerMejorPagina(M,p):
     mejor_pagina = 0
     rnk,scr = calcularRanking(M, p)
