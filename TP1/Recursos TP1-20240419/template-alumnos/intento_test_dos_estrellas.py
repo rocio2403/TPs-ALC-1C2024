@@ -285,7 +285,81 @@ plt.show()
 #                   CASO TEST DOS ESTRELLAS
 #
 ##############################################################################   
+#%%
 
+##############################################################################
+#
+#                   CASO TEST DOS ESTRELLAS
+#
+##############################################################################   
+
+"""
+¿Cual es la minima cantidad de links que se deben agregar para que la pagina 1 
+quede primera en el ranking?
+
+¿Como se modificó la amtriz de concetividad?
+"""    
+
+###################################################################
+#
+# LUEGO DE SABER COMO FUNCIONABA RNK
+#Los indices son las paginas y los elementos son los rankings
+##################################################################
+
+
+
+#Para poder responder estas preguntas, veamos cuantos links asociados tiene
+#la pagina 1 y cuantos tiene la pagina que queda primera en el ranking
+p = 0.5
+# veamos cual es la pagina que queda primero
+mejor_pagina = obtenerMejorPagina(dos_estrellas, p)
+# observamos e grafo de dos_estrellas
+dibujarGrafo(dos_estrellas,titulo = 'Grafo Dos Estrellas',print_ejes=False)
+print('La primera pagina que queda en el ranking es la pagina ', mejor_pagina)
+
+#vemos en que ranking está 1
+def obtenerPosicionEnRanking(w,p,pagina):
+    rnk,scr = calcularRanking(w, p)
+    posicion = rnk[pagina-1]
+    return posicion
+    
+#ahora vemos la posicion de la pagina 1
+posicion_pag_1 = obtenerPosicionEnRanking(dos_estrellas, p, 1)
+print('La posicion en ranking de la pagina 1 es: ', posicion_pag_1)
+
+#sabemos que la primera en el ranking es 6 y la tercera es 1, buscamos la segunda
+
+def obtenerPaginaEnPosicion(w,p,posicion):
+    rnk,scr = calcularRanking(w, p)
+    pagina=0
+    for i in range(len(rnk)):
+        if (rnk[i]==posicion):
+            pagina = i + 1
+    return pagina
+
+def obtenerIndiceMejorPagina(w,p):
+    mejor_pagina = obtenerMejorPagina(w, p) #me da 6
+    indice=obtenerPaginaEnPosicion(w, p, 1) #me da
+    return indice-1
+
+print('indice',obtenerIndiceMejorPagina(dos_estrellas, p))
+
+segunda_ranking =obtenerPaginaEnPosicion(dos_estrellas, p, 2)
+print('pagina en posicion 2:', segunda_ranking)
+
+#probamos conectando un nodo a la pagina 7
+def modificar_links_Asociados(matriz,pagina,links):
+    nueva_matriz = matriz.copy()
+    for link in links:
+        nueva_matriz[link-1][pagina-1] = 1
+    return nueva_matriz
+
+def elimina_links_Asociados(matriz,pagina,links):
+    nueva_matriz = matriz.copy()
+    for link in links:
+        nueva_matriz[link-1][pagina-1] = 0
+    return nueva_matriz
+########################correr lo de arriba
 """
 ¿Cual es la minima cantidad de links que se deben agregar para que la pagina 1 
 quede primera en el ranking?
