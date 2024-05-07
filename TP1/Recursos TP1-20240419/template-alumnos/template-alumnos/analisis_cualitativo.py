@@ -1,6 +1,20 @@
 # -*- coding: utf-8 -*-
 """
 Trabajo Práctico 1:
+Grupo : Susano y Valentin 
+Integrantes: Ibarra, Abril Magalí, Dominguez, Rocio Julieta
+Materia: Algebra Lineal Computacional
+Periodo. Primer Cuatrimestre 2024
+"""
+
+from funciones import *
+import matplotlib.pyplot as plt
+
+#%%
+##########################################################################
+## -*- coding: utf-8 -*-
+"""
+Trabajo Práctico 1:
 Grupo : Susano y Valentin
 Integrantes: Ibarra, Abril Magalí, Dominguez, Rocio Julieta
 Materia: Algebra Lineal Computacional
