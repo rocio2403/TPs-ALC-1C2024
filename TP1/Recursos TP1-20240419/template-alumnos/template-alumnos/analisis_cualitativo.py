@@ -28,6 +28,7 @@ segundos_30 = leer_archivo(carpeta + 'test_30_segundos.txt')
 aleatorio = leer_archivo(carpeta + 'test_aleatorio.txt')
 dos_estrellas = leer_archivo(carpeta + 'test_dosestrellas.txt')
 
+#%%
 #armamos un solo grafico con todos los grafos, para eso creamos subplots
 
 fig, axs = plt.subplots(2, 3, figsize=(15, 10))
@@ -72,7 +73,6 @@ def obtenerIndiceMejorPagina(w,p):
     indice=obtenerPaginaEnPosicion(w, p, 1) #me da
     return indice-1
 
-
 def ranking_pagina_vs_p(w, leyenda, color, ax):
    
     mejores_paginas = []
@@ -105,16 +105,20 @@ plt.show()
 #%%
 #analicemos el test 30 segundos, el cual presenta variaciones
 
+
 print('la mejor pagina en el Test 30 segundos con p = 0.6 es la pagina: ',
-      obtenerMejorPagina(segundos_30, 0.6))
+      obtenerMejorPagina(segundos_30, 0.6))  #obtener mejor pagina esta el problema
+# Veamos cual es la segunda posicion 
+print('La pagina en la posicion 2 del ranking es: ',
+      obtenerPaginaEnPosicion(segundos_30, 0.6, 2))
 
 #veamos con cuantos nodos está conectada esta pagina
 def cant_link_asociados(matriz,pagina):
     links_asociados = np.sum(matriz[:, pagina-1])
     return links_asociados
 
-pagina = obtenerIndiceMejorPagina(segundos_30, 0.6)
-print('Cantindad de links asociados a la pagina {pagina} : ', 
+pagina = obtenerIndiceMejorPagina(segundos_30, 0.6) + 1
+print(f'Cantindad de links asociados a la pagina {pagina} : ', 
       cant_link_asociados(segundos_30, pagina))
 
 
@@ -126,8 +130,12 @@ print('la mejor pagina en el Test 30 segundos con p = 0.7 es la pagina: ',
 
 
 pagina_07 = obtenerIndiceMejorPagina(segundos_30, 0.7)
-print('Cantindad de links asociados a la pagina {pagina_07} : ', 
+print(f'Cantindad de links asociados a la pagina {pagina_07} : ', 
       cant_link_asociados(segundos_30, pagina_07))
+
+#vemos en que posicion quedo la pagina 6, al aumentar p
+print(f'La posicion de {pagina} con p = 0.7 es : ',
+      obtenerPosicionEnRanking(segundos_30, 0.7, pagina))
 
 
 #%%
