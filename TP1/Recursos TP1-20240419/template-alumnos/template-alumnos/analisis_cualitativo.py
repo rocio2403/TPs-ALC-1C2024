@@ -53,14 +53,32 @@ Ahora analizamos como varía la pagina mejor rankeada de acuerdo a p
 
 p_valores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
-#ahora vamos a calcular el mejor numero de pagina en funcion de p 
+#vemos en que ranking está 1
+def obtenerPosicionEnRanking(w,p,pagina):
+    rnk,scr = calcularRanking(w, p)
+    posicion = rnk[pagina-1]
+    return posicion
+
+def obtenerPaginaEnPosicion(w,p,posicion):
+    rnk,scr = calcularRanking(w, p)
+    pagina=0
+    for i in range(len(rnk)):
+        if (rnk[i]==posicion):
+            pagina = i + 1
+    return pagina
+
+def obtenerIndiceMejorPagina(w,p):
+    mejor_pagina = obtenerMejorPagina(w, p) #me da 6
+    indice=obtenerPaginaEnPosicion(w, p, 1) #me da
+    return indice-1
+
 
 def ranking_pagina_vs_p(w, leyenda, color, ax):
    
     mejores_paginas = []
     for p in p_valores:
         rnk, scr = calcularRanking(w, p)
-        mejor_pagina = max(rnk)
+        mejor_pagina = obtenerMejorPagina(w, p)
         mejores_paginas.append(mejor_pagina)
     ax.plot(p_valores, mejores_paginas, label=leyenda, color=color)
    
@@ -83,6 +101,33 @@ ranking_pagina_vs_p(dos_estrellas, leyenda='Test Dos Estrellas', color='brown', 
 
 plt.tight_layout()  
 plt.show()
+
+#%%
+#analicemos el test 30 segundos, el cual presenta variaciones
+
+print('la mejor pagina en el Test 30 segundos con p = 0.6 es la pagina: ',
+      obtenerMejorPagina(segundos_30, 0.6))
+
+#veamos con cuantos nodos está conectada esta pagina
+def cant_link_asociados(matriz,pagina):
+    links_asociados = np.sum(matriz[:, pagina-1])
+    return links_asociados
+
+pagina = obtenerIndiceMejorPagina(segundos_30, 0.6)
+print('Cantindad de links asociados a la pagina {pagina} : ', 
+      cant_link_asociados(segundos_30, pagina))
+
+
+print('*'*50)
+print('Ahora vemos que sucede cuando aumentamos p')
+
+print('la mejor pagina en el Test 30 segundos con p = 0.7 es la pagina: ',
+      obtenerMejorPagina(segundos_30, 0.7))
+
+
+pagina_07 = obtenerIndiceMejorPagina(segundos_30, 0.7)
+print('Cantindad de links asociados a la pagina {pagina_07} : ', 
+      cant_link_asociados(segundos_30, pagina_07))
 
 
 #%%
