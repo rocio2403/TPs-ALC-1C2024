@@ -174,7 +174,6 @@ Es decir, aquella que en el ranking tiene posicion  1
 def obtenerMejorPagina(M,p):
     mejor_pagina = 0
     rnk,scr = calcularRanking(M, p)
-    print('rnk:' ,rnk)
     for i in range(len(rnk)):
          if (rnk[i]==1):
              mejor_pagina = i+1
@@ -583,222 +582,75 @@ distintos gráficos y los combina
 
 # Obtenemos la matriz para test
 
-carpeta = './tests/'
-
-famosos = leer_archivo(carpeta + 'instagram_famosos_grafo.txt')
-mathworld = leer_archivo(carpeta + 'mathworld_grafo.txt')
-segundos_15 = leer_archivo(carpeta + 'test_15_segundos.txt')
-segundos_30 = leer_archivo(carpeta + 'test_30_segundos.txt')
-aleatorio = leer_archivo(carpeta + 'test_aleatorio.txt')
-dos_estrellas = leer_archivo(carpeta + 'test_dosestrellas.txt')
+def leer_test():
+    carpeta = './tests/'
+    test_dados = ['instagram_famosos_grafo.txt', 'mathworld_grafo.txt',
+             'test_15_segundos.txt', 'test_30_segundos.txt',
+             'test_aleatorio.txt', 'test_dosestrellas.txt']
+    nombres = [item.replace(".txt", "") for item in test_dados]
+    test = []
+    for t in test_dados:
+        archivo = leer_archivo(carpeta + t)
+        test.append(archivo)
+   
+    return test,nombres
+    
 
 #armamos un solo grafico con todos los grafos, para eso creamos subplots
 
-fig, axs = plt.subplots(2, 3, figsize=(15, 10))
+def grafos_test():    
+   
+    test,nombres  = leer_test()
+    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
 
-# Dibujamos  cada grafo en un subplot diferente
-dibujarGrafo(famosos, titulo='Grafo Test Instagram_famosos', print_ejes=False, ax=axs[0, 0])
-dibujarGrafo(mathworld, titulo='Grafo Test Mathworld', print_ejes=False, ax=axs[0, 1])
-dibujarGrafo(segundos_15, titulo='Grafo Test 15 segundos', print_ejes=False, ax=axs[0, 2])
-dibujarGrafo(segundos_30, titulo='Grafo Test 30 segundos', print_ejes=False, ax=axs[1, 0])
-dibujarGrafo(aleatorio, titulo='Grafo Test Aleatorio', print_ejes=False, ax=axs[1, 1])
-dibujarGrafo(dos_estrellas, titulo='Grafo Test Dos Estrellas', print_ejes=False, ax=axs[1, 2])
+    # Dibujamos  cada grafo en un subplot diferente
+    for i in range(3):     
+        dibujarGrafo(test[i],titulo = nombres[i],print_ejes= False,ax=axs[0,i])
+    for i in range(3,6):     
+        dibujarGrafo(test[i],titulo = nombres[i],print_ejes= False,ax=axs[1,5-i])
 
-plt.tight_layout()
- 
-plt.show()
-
+  
+    plt.tight_layout()
+     
+    plt.show()
 
 
 #Ahora analizamos como varía la pagina mejor rankeada de acuerdo a p
 #Para eso utilizamos la funcion calcular ranking del modulo funciones
 
 #----------------
-#Creamos Grafico de Mejor Pagina vs P
-p_valores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
-
-#Realizamos el grafico que combina los demas graficos
-fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
-
-
-ranking_pagina_vs_p(famosos, leyenda='Test Famosos', color='red', ax=axs[0, 0])
-ranking_pagina_vs_p(mathworld, leyenda='Test Mathworld', color='blue', ax=axs[0, 1])
-ranking_pagina_vs_p(segundos_15, leyenda='Test 15 Segundos', color='green', ax=axs[0, 2])
-ranking_pagina_vs_p(segundos_30, leyenda='Test 30 Segundos ', color='orange', ax=axs[1, 0])
-ranking_pagina_vs_p(aleatorio, leyenda='Test Aleatorio', color='purple', ax=axs[1, 1])
-ranking_pagina_vs_p(dos_estrellas, leyenda='Test Dos Estrellas', color='brown', ax=axs[1, 2])
-
-
-plt.tight_layout()  
-plt.show()
-
-
-#analicemos el test 30 segundos, el cual presenta variaciones
-
-print('la mejor pagina en el Test 30 segundos con p = 0.6 es la pagina: ',
-      obtenerMejorPagina(segundos_30, 0.6))
-
-#veamos con cuantos nodos está conectada esta pagina
-
-pagina = obtenerIndiceMejorPagina(segundos_30, 0.6)
-print('Cantindad de links asociados a la pagina {pagina} : ', 
-      cant_link_asociados(segundos_30, pagina))
-
-
-print('*'*50)
-print('Ahora vemos que sucede cuando aumentamos p')
-
-print('la mejor pagina en el Test 30 segundos con p = 0.7 es la pagina: ',
-      obtenerMejorPagina(segundos_30, 0.7))
-
-
-pagina_07 = obtenerIndiceMejorPagina(segundos_30, 0.7)
-print('Cantindad de links asociados a la pagina {pagina_07} : ', 
-      cant_link_asociados(segundos_30, pagina_07))
+def grafico_mejor_ranking_vs_p():
+    #Creamos Grafico de Mejor Pagina vs P
+    p_valores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    
+    test,nombres  = leer_test()
+    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
+    color = ['red','blue','green','orange','purple','brown']
+    # Dibujamos  cada grafo en un subplot diferente
+    for i in range(3):     
+        ranking_pagina_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[0,i])
+    for i in range(3,6):     
+        ranking_pagina_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[1,5-i])
+  
+   
+ 
+    plt.show()
+    
 
 #Ahora analizamos como varía el puntaje de la mejor pagina de acuerdo a p y graficamos 
-
-fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
-
+   
+def grafico_score_vs_p():
+    p_valores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    
+    test,nombres  = leer_test()
+    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
+    color = ['red','blue','green','orange','purple','brown']
+    # Dibujamos  cada grafo en un subplot diferente
+    for i in range(3):     
+        ranking_score_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[0,i])
+    for i in range(3,6):     
+        ranking_score_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[1,5-i])
+  
  
-ranking_score_vs_p(famosos, leyenda='Test Famosos', color='red', ax=axs[0, 0])
-ranking_score_vs_p(mathworld, leyenda='Test Mathworld', color='blue', ax=axs[0, 1])
-ranking_score_vs_p(segundos_15, leyenda='Test 15 Segundos', color='green', ax=axs[0, 2])
-ranking_score_vs_p(segundos_30, leyenda='Test 30 Segundos ', color='orange', ax=axs[1, 0])
-ranking_score_vs_p(aleatorio, leyenda='Test Aleatorio', color='purple', ax=axs[1, 1])
-ranking_score_vs_p(dos_estrellas, leyenda='Test Dos Estrellas', color='brown', ax=axs[1, 2])
-
-plt.tight_layout()  
-plt.show()
-
-# Calcular la densidad de cada grafo
-densidad_famosos = calcular_densidad(famosos)
-densidad_mathworld = calcular_densidad(mathworld)
-densidad_segundos_15 = calcular_densidad(segundos_15)
-densidad_segundos_30 = calcular_densidad(segundos_30)
-densidad_aleatorio = calcular_densidad(aleatorio)
-densidad_dos_estrellas = calcular_densidad(dos_estrellas)
-
-# Imprimir las densidades
-print("Densidad del grafo de famosos:", densidad_famosos)
-print("Densidad del grafo de mathworld:", densidad_mathworld)
-print("Densidad del grafo de segundos_15:", densidad_segundos_15)
-print("Densidad del grafo de segundos_30:", densidad_segundos_30)
-print("Densidad del grafo de aleatorio:", densidad_aleatorio)
-print("Densidad del grafo de dos_estrellas:", densidad_dos_estrellas)
-
-#%%
-#============================
-# Generación de Test Propios
-#===========================
-
-#Generamos un archivo .txt con los nodos todos conectados entre si
-
-nombre_archivo = "todos_conectados.txt"
-num_paginas = 7  
-generar_test_todos_conectados(nombre_archivo, num_paginas)
-
-
-matriz_todos_conectados = leer_archivo(nombre_archivo)
-dibujarGrafo(matriz_todos_conectados,titulo = 'Grafo Todos Conectados',print_ejes=False)
-
-#Ahora miramos el ranking de páginas en este caso
-p=0.5
-rnk,scr = calcularRanking(matriz_todos_conectados, p)
-
-print('===================================')
-print('Resultados del test Todos Conectados')
-print('===================================')
-print('ranking: ', rnk)
-print('Puntajes: ', scr)
-
-#%%
-#generamos un archivo .txt con nodos sin conexion 
-
-nombre_archivo_no_conectado = "test_ninguno_conectado.txt"
-num_paginas_no_conectados = 7  
-generar_test_ninguno_conectado(nombre_archivo_no_conectado, num_paginas_no_conectados)
-matriz_ninguno_conectado = leer_archivo(nombre_archivo_no_conectado)
-dibujarGrafo(matriz_ninguno_conectado,titulo = 'Grafo Ninguno Conectado',print_ejes=False)
-
-
-#Ahora miramos el ranking de páginas en este caso
-p=0.5
-rnk,scr = calcularRanking(matriz_ninguno_conectado, p)
-print('===================================')
-print('Resultados del test Ninguno Conectado')
-print('===================================')
-print('ranking: ', rnk)
-print('Puntajes: ', scr)
-
-#%%
-# Generamos el test Algunos nocectados y otros no 
-W = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0
-]
-
-W = np.array(W).reshape(46, 46)
-
-
-nombre_archivo_algunos = "test_algunos_conectados"
-num_paginas_algunos = 46  
-generar_archivo_txt(W, nombre_archivo)
-matriz_algunosconectados = leer_archivo(nombre_archivo_algunos)
-
-dibujarGrafo(matriz_algunosconectados,titulo = 'Grafo ',print_ejes=False)
-
-
-#Ahora miramos el ranking de páginas en este caso
-p=0.5
-rnk,scr = calcularRanking(matriz_algunosconectados, p)
-print('===================================')
-print('Resultados del test Algunos Conectados')
-print('===================================')
-print('ranking: ', rnk)
-print('Puntajes: ', scr)
-
+    plt.show()
