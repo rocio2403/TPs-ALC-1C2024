@@ -365,18 +365,18 @@ def generar_test_ninguno_conectado(nombre_archivo, num_paginas):
         archivo.write("0\n")  #No hay enlaces
 
 """
-Dada una matriz de conectividad y su tamaño n, m genera y guarda un archivo.txt
-Le coloca el nombre pasado como parametro.
+La siguiente funcion genera y guarda un archivo .txt que represetna a una matriz
+donde una apgina està conectada con la siguiente y la ultima con la primera, generando un ciclo
 """
-def generar_archivo_txt(W, n, m, nombre_archivo):
+def generar_test_ciclico(nombre_archivo, num_paginas):
     with open(nombre_archivo, 'w') as archivo:
-        archivo.write(f"{n}\n")
-        archivo.write(f"{m}\n")
+        archivo.write(str(num_paginas) + '\n')  
+        num_enlaces = num_paginas   
+        archivo.write(str(num_enlaces) + '\n')
 
-        for i in range(len(W)):
-            for j in range(len(W[i])):
-                if W[i][j] == 1:
-                    archivo.write(f"{j+1} {i+1}\n")
+        for i in range(1, num_paginas):
+            archivo.write(f"{i} {i+1}\n")
+        archivo.write(f"{num_paginas} 1\n")
 
 #%%
 ##############################################################################
@@ -608,8 +608,6 @@ def grafos_test():
         dibujarGrafo(test[i],titulo = nombres[i],print_ejes= False,ax=axs[1,5-i])
 
   
-    plt.tight_layout()
-     
     plt.show()
 
 
