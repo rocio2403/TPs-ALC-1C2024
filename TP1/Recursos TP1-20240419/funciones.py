@@ -191,71 +191,41 @@ def obtenerMaximoRankingScore(M, p):
 #               Funciones para el Análisis Cuantitativo
 ############################################################################
 
-def generar_matriz(n, m):
-    """
-    Genera una matriz cuadrada de tamaño nxn con m unos y el resto de entradas ceros.
-    """
-    # Inicializar una matriz de ceros
-    W = np.zeros((n, n))
-    
-    # Llenar m posiciones aleatorias con unos
-    indices = np.random.choice(n*n, m, replace=False)
-    W.flat[indices] = 1
-    
-    return W
-
-
-def generar_matrizW_no_singular(n, m):
-    """
-    Genera una matriz cuadrada no singular de tamaño nxn con m unos y el resto ceros.
- 
-    Advertencia, m no puede ser cualquier número. El valor de m para garantizar que
-    la matriz generada sea no singular con respecto a n es desde n (rango de W) hasta
-    n*2 -1.
-    """
-    # Inicializar una matriz cuadrada de ceros
-    W = np.zeros((n, n))
-    
-    # Colocar m unos aleatoriamente en la matriz
-    indices = np.random.choice(n*n, m, replace=False)
-    W.flat[indices] = 1
-    
-    # Asegurar que la matriz sea no singular
-    while np.linalg.matrix_rank(W) != n:
-        indices = np.random.choice(n*n, m, replace=False)
-        W = np.zeros((n, n))
-        W.flat[indices] = 1
-    
-    return W
-
-
-# def calcularTiempoDeProcesamiento(metodo, W):
-#     """
-#         Obtenemos el tiempo de procesamiento en función del tamaño del grafo de páginas (n) y de 
-#         la cantidad de links del mismo (m).
-        
-#         Para el método 0 se resuelve la ecuación 3.
-#         Para el método 1 (navegante aleatorio) se resuelve la ecuación 6 con un p fijo.
-        
-#         Devuelve un diccionario con los datos de la muestra W
-#     """
-#     n = W.shape[0]
-#     m = int(W.sum())
-#     p = 0.5
-    
-#     if metodo == 1:
-#         resultado = %timeit -o -r 1 -n 1 calcularRanking(W, p)
-#     else:
-#         resultado = %timeit -o -r 1 -n 1 calcularRanking(W, 0)
-    
-#     tiempoProcesamiento = round(resultado.best * 1000, 2)
-
-#     registro = {'metodo':metodo, 'paginas':n, 'links':m, 'tiempoProcesamiento':tiempoProcesamiento}    
-#     return registro
-    
 ############################################################################
 #               Funciones para el Análisis Cualitativo
 ############################################################################
+
+def leer_test():
+    carpeta = './tests/'
+    test_dados = ['instagram_famosos_grafo.txt', 'mathworld_grafo.txt',
+             'test_15_segundos.txt', 'test_30_segundos.txt',
+             'test_aleatorio.txt', 'test_dosestrellas.txt']
+    nombres = [item.replace(".txt", "") for item in test_dados]
+    test = []
+    for t in test_dados:
+        archivo = leer_archivo(carpeta + t)
+        test.append(archivo)
+   
+    return test,nombres
+    
+
+#armamos un solo grafico con todos los grafos, para eso creamos subplots
+
+def grafos_test():    
+   
+    test,nombres  = leer_test()
+    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
+
+    # Dibujamos  cada grafo en un subplot diferente
+    for i in range(3):     
+        dibujarGrafo(test[i],titulo = nombres[i],print_ejes= False,ax=axs[0,i])
+    for i in range(3,6):     
+        dibujarGrafo(test[i],titulo = nombres[i],print_ejes= False,ax=axs[1,5-i])
+
+  
+    plt.tight_layout()
+     
+    plt.show()
 
 def obtenerPosicionEnRanking(w,p,pagina):
     rnk,scr = calcularRanking(w, p)
@@ -323,6 +293,40 @@ def links_asociados(matriz,pagina):
             links.append(i + 1)
     return links
 
+def grafico_mejor_ranking_vs_p():
+    #Creamos Grafico de Mejor Pagina vs P
+    p_valores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    
+    test,nombres  = leer_test()
+    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
+    color = ['red','blue','green','orange','purple','brown']
+    # Dibujamos  cada grafo en un subplot diferente
+    for i in range(3):     
+        ranking_pagina_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[0,i])
+    for i in range(3,6):     
+        ranking_pagina_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[1,5-i])
+  
+   
+ 
+    plt.show()
+    
+
+def grafico_score_vs_p():
+    p_valores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    
+    test,nombres  = leer_test()
+    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
+    color = ['red','blue','green','orange','purple','brown']
+    # Dibujamos  cada grafo en un subplot diferente
+    for i in range(3):     
+        ranking_score_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[0,i])
+    for i in range(3,6):     
+        ranking_score_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[1,5-i])
+  
+ 
+    plt.show()
+
+
 def calcular_densidad(W):
     n = W.shape[0]  # Número de nodos en el grafo
     aristas_presentes = np.sum(W)  # Número de aristas presentes en la matriz de conectividad w
@@ -365,8 +369,8 @@ def generar_test_ninguno_conectado(nombre_archivo, num_paginas):
         archivo.write("0\n")  #No hay enlaces
 
 """
-La siguiente funcion genera y guarda un archivo .txt que represetna a una matriz
-donde una apgina està conectada con la siguiente y la ultima con la primera, generando un ciclo
+Dado un numero de paginas y un nombre, genera un archivo .txt, en el cual
+se representan los links de una matriz de conectividad de relaciòn ciclica
 """
 def generar_test_ciclico(nombre_archivo, num_paginas):
     with open(nombre_archivo, 'w') as archivo:
@@ -378,276 +382,12 @@ def generar_test_ciclico(nombre_archivo, num_paginas):
             archivo.write(f"{i} {i+1}\n")
         archivo.write(f"{num_paginas} 1\n")
 
-#%%
-##############################################################################
-#
-# A continuación se adjunta el uso del codigo para los análisis y Test Propios
-#
-#############################################################################
-
-
-#============================
-# Análisis Cuantitativo
-#===========================
-
-# #-------------------------------- MÉTODO NAVEGANTE ALEATORIO
-# # Gráfico cantidad de links vs tiempo de procesamiento para cantidad de páginas fija
-
-# cantPaginas = 15
-# max_cantLinks = cantPaginas * (cantPaginas-1)
-
-# # Almacenar tiempos para el método 1
-# tiempos_pagina_fija = []
-# for i in range(0, max_cantLinks+1, 1):
-#     W = generar_matriz(cantPaginas, i)
-#     registro = calcularTiempoDeProcesamiento(1, W)
-#     tiempos_pagina_fija.append(registro['tiempoProcesamiento'])
-
-# # Gráfico cantidad de páginas vs tiempo de procesamiento para cantidad de links fijo
-# carpeta = './tests_linksfijo/'
-
-# min_cantPags = 5
-# max_cantPags = min_cantPags*6
-# cantLinks = min_cantPags * (min_cantPags-1)
-
-# # Almacenar tiempos para el método 2
-# tiempos_link_fijo = []
-# for i in range(min_cantPags, max_cantPags+1, 1):
-#     W = generar_matriz(i, cantLinks)
-#     registro = calcularTiempoDeProcesamiento(1, W)
-#     tiempos_link_fijo.append(registro['tiempoProcesamiento'])
-
-
-# df_pagina_fija = pd.DataFrame({
-#     'Método': [f'Páginas fijas\nCantidad de páginas: {cantPaginas}\nRango de links: 0-{max_cantLinks}'] * len(tiempos_pagina_fija),
-#     'Cantidad de Links': list(range(0, max_cantLinks+1, 1)),
-#     'Tiempo de ejecución (ms)': tiempos_pagina_fija
-# })
-
-# df_link_fijo = pd.DataFrame({
-#     'Método': [f'Links fijos\nCantidad de links: {cantLinks}\nRango de páginas: {min_cantPags}-{max_cantPags}'] * len(tiempos_link_fijo),
-#     'Cantidad de Páginas': list(range(min_cantPags, max_cantPags+1)),
-#     'Tiempo de ejecución (ms)': tiempos_link_fijo
-# })
-
-# # Combinar DataFrames
-# df_combined = pd.concat([df_pagina_fija, df_link_fijo])
-
-# # Crear gráficos de caja con Seaborn
-# plt.figure(figsize=(8, 6))
-
-# sns.boxplot(x='Método', y='Tiempo de ejecución (ms)', hue='Método', data=df_combined, palette="Set2", legend=False)
-# plt.title('Tiempo de ejecución variando cantidad de páginas y links')
-# plt.xlabel('NAVEGANTE ALEATORIO', labelpad=30)
-# plt.ylabel('Tiempo de ejecución (ms)')
-
-# plt.grid(True)
-# plt.show()
-
-# #-------------------------------- MÉTODO ESTÁNDAR
-# """
-# Para este método tenemos el problema de que la matriz R-I no siempre es no singular,
-# por lo que no se garantiza que siempre exista factorización LU. 
-# Como Rx=x <-> (R-I)x=0 es homogeneo, siempre hay solución y si det(R-I)=0 las soluciones
-# son infinitas.  
-
-# Para poder estudiar los tiempos de ejecución con este método adecuamos la generación de matrices
-# de conectividad para que siempre resulte en R-I no singulare y haya una única solución. 
-
-# """
-
-# # Gráfico cantidad de links vs tiempo de procesamiento para cantidad de páginas fija
-
-# cantPaginas = 5
-# max_cantLinks = cantPaginas *2 - 1
-# min_cantLinks = cantPaginas
-# # Almacenar tiempos para el método 1
-# tiempos_pagina_fija = []
-# for i in range(min_cantLinks, max_cantLinks+1, 1):
-#     W = generar_matrizW_no_singular(cantPaginas, i)
-#     registro = calcularTiempoDeProcesamiento(1, W)
-#     tiempos_pagina_fija.append(registro['tiempoProcesamiento'])
-
-# # Gráfico cantidad de páginas vs tiempo de procesamiento para cantidad de links fijo
-
-# min_cantPags = 5
-# max_cantPags = min_cantPags*2 -1
-# cantLinks = min_cantPags*2 -1
-
-# # Almacenar tiempos para el método 2
-# tiempos_link_fijo = []
-# for i in range(min_cantPags, max_cantPags+1, 1):
-#     W = generar_matrizW_no_singular(i, cantLinks)
-#     registro = calcularTiempoDeProcesamiento(1, W)
-#     tiempos_link_fijo.append(registro['tiempoProcesamiento'])
-
-
-# df_pagina_fija = pd.DataFrame({
-#     'Método': [f'Páginas fijas\nCantidad de páginas: {cantPaginas}\nRango de links: 0-{max_cantLinks}'] * len(tiempos_pagina_fija),
-#     'Cantidad de Links': list(range(min_cantLinks, max_cantLinks+1, 1)),
-#     'Tiempo de ejecución (ms)': tiempos_pagina_fija
-# })
-
-# df_link_fijo = pd.DataFrame({
-#     'Método': [f'Links fijos\nCantidad de links: {cantLinks}\nRango de páginas: {min_cantPags}-{max_cantPags}'] * len(tiempos_link_fijo),
-#     'Cantidad de Páginas': list(range(min_cantPags, max_cantPags+1)),
-#     'Tiempo de ejecución (ms)': tiempos_link_fijo
-# })
-
-# # Combinar DataFrames
-# df_combined = pd.concat([df_pagina_fija, df_link_fijo])
-
-# # Crear gráficos de caja con Seaborn
-# plt.figure(figsize=(8, 6))
-
-# sns.boxplot(x='Método', y='Tiempo de ejecución (ms)', hue='Método', data=df_combined, palette="Set2", legend=False)
-# plt.title('Tiempo de ejecución variando cantidad de páginas y links')
-# plt.xlabel('MÉTODO ESTÁNDAR', labelpad=30)
-# plt.ylabel('Tiempo de ejecución (ms)')
-
-# plt.grid(True)
-# plt.show()
 
 
 
-# #-------------------Tests dados
-# carpeta = './tests/'
-# tests = ['instagram_famosos_grafo.txt', 'mathworld_grafo.txt', 'test_15_segundos.txt', 'test_30_segundos.txt', 'test_aleatorio.txt', 'test_dosestrellas.txt']
-# paginas = []
-# links = []
-# #NAVEGANTE ALEATORIO
-# tiempos_tests1 = []
-# #MÉTODO ESTANDAR
-# tiempos_tests0 = []
-
-
-# # Crear DataFrame
-# df = pd.DataFrame({
-#     'Test': tests,
-#     'Cantidad de Páginas': paginas,
-#     'Cantidad de Links': links,
-#     'Tiempo Método Estándar': tiempos_tests0,
-#     'Tiempo Navegante Aleatorio': tiempos_tests1
-# })
-# # Crear gráfico de burbujas
-# fig, ax = plt.subplots(figsize=(10, 6))
-
-# # Plotear burbujas
-# scatter1 = sns.scatterplot(data=df, x='Cantidad de Links', y='Cantidad de Páginas', size='Tiempo Método Estándar', sizes=(100, 2000), alpha=0.7, color='red', ax=ax)
-# scatter2 = sns.scatterplot(data=df, x='Cantidad de Links', y='Cantidad de Páginas', size='Tiempo Navegante Aleatorio', sizes=(100, 2000), color='pink', alpha=0.5, ax=ax)
-
-# # Crear subgráfico para el zoom
-# ax_zoom = plt.axes([0.2, 0.55, .3, .3], facecolor='white')  # Ajustar posición del zoom
-# scatter_zoom1 = sns.scatterplot(data=df, x='Cantidad de Links', y='Cantidad de Páginas', size='Tiempo Método Estándar', sizes=(300, 1500),color='red', alpha=0.7, ax=ax_zoom)
-# scatter_zoom2 = sns.scatterplot(data=df, x='Cantidad de Links', y='Cantidad de Páginas', size='Tiempo Navegante Aleatorio', sizes=(300, 1500),color='pink', alpha=0.5, ax=   ax_zoom)
-# ax_zoom.set_xlim([3, 190])
-# ax_zoom.set_ylim([2, 35])
-
-# # Eliminar etiquetas de ejes y leyenda del subgráfico de zoom
-# ax_zoom.set_xlabel('')
-# ax_zoom.set_ylabel('')
-# ax_zoom.legend().set_visible(False)
-
-# # Crear una leyenda personalizada con burbujas de tamaño específico
-# legend_elements = [
-#     plt.scatter([], [], s=100, color='red', label='Método Estándar'),
-#     plt.scatter([], [], s=100, color='pink', label='Navegante Aleatorio')
-# ]
-# ax.legend(handles=legend_elements, loc='lower right', fontsize='large')
-# ax.set_xlim([-500,19000])
-# ax.set_ylim([-100,3500])
-
-# # Centrar el título horizontalmente
-# title = plt.title('Tiempo de ejecución en función de la cantidad de links y páginas', pad=40)
-# title.set_position([.0, 1.04])
-# plt.show()
-
-# for t in tests:
-#     W = leer_archivo(carpeta+t)
-#     datos = calcularTiempoDeProcesamiento(1, W)
-#     tiempos_tests1.append(datos['tiempoProcesamiento'])
-#     W = leer_archivo(carpeta+t)
-#     datos = calcularTiempoDeProcesamiento(0, W)
-#     tiempos_tests0.append(datos['tiempoProcesamiento'])
-#     paginas.append(datos['paginas'])
-#     links.append(datos['links'])
-    
-#%%
 
 #============================
 # Análisis Cualitativo
 #===========================
 
-# Obtenemos la matriz para test
-
-def leer_test():
-    carpeta = './tests/'
-    test_dados = ['instagram_famosos_grafo.txt', 'mathworld_grafo.txt',
-             'test_15_segundos.txt', 'test_30_segundos.txt',
-             'test_aleatorio.txt', 'test_dosestrellas.txt']
-    nombres = [item.replace(".txt", "") for item in test_dados]
-    test = []
-    for t in test_dados:
-        archivo = leer_archivo(carpeta + t)
-        test.append(archivo)
-   
-    return test,nombres
-    
-
-#armamos un solo grafico con todos los grafos, para eso creamos subplots
-
-def grafos_test():    
-   
-    test,nombres  = leer_test()
-    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
-
-    # Dibujamos  cada grafo en un subplot diferente
-    for i in range(3):     
-        dibujarGrafo(test[i],titulo = nombres[i],print_ejes= False,ax=axs[0,i])
-    for i in range(3,6):     
-        dibujarGrafo(test[i],titulo = nombres[i],print_ejes= False,ax=axs[1,5-i])
-
-  
-    plt.show()
-
-
-#Ahora analizamos como varía la pagina mejor rankeada de acuerdo a p
-#Para eso utilizamos la funcion calcular ranking del modulo funciones
-
-#----------------
-
-def grafico_mejor_ranking_vs_p():
-    #Creamos Grafico de Mejor Pagina vs P
-    p_valores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    
-    test,nombres  = leer_test()
-    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
-    color = ['red','blue','green','orange','purple','brown']
-    # Dibujamos  cada grafo en un subplot diferente
-    for i in range(3):     
-        ranking_pagina_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[0,i])
-    for i in range(3,6):     
-        ranking_pagina_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[1,5-i])
-  
-   
- 
-    plt.show()
-    
-
-#Ahora analizamos como varía el puntaje de la mejor pagina de acuerdo a p y graficamos 
-   
-def grafico_score_vs_p():
-    p_valores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    
-    test,nombres  = leer_test()
-    fig, axs = plt.subplots(2, 3, figsize=(15, 10)) 
-    color = ['red','blue','green','orange','purple','brown']
-    # Dibujamos  cada grafo en un subplot diferente
-    for i in range(3):     
-        ranking_score_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[0,i])
-    for i in range(3,6):     
-        ranking_score_vs_p(test[i],leyenda = nombres[i],color = random.choice(color),ax=axs[1,5-i])
-  
- 
-    plt.show()
 
