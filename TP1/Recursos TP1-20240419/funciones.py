@@ -187,9 +187,6 @@ def obtenerMaximoRankingScore(M, p):
     
     return output
 
-############################################################################
-#               Funciones para el Análisis Cuantitativo
-############################################################################
 
 ############################################################################
 #               Funciones para el Análisis Cualitativo
@@ -383,11 +380,8 @@ def generar_test_ciclico(nombre_archivo, num_paginas):
         archivo.write(f"{num_paginas} 1\n")
 
 
-
-
-
-#============================
-# Análisis Cualitativo
-#===========================
+############################################################################
+#               Funciones para el Análisis Cuantitativo
+############################################################################
 
 
