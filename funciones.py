@@ -489,6 +489,9 @@ def datos_graficoComparacion_Metodos():
         links.append(datos['links'])
     return tests, paginas, links, tiempos_tests0, tiempos_tests1
 def graficoComparacion_Metodos():
+    """
+    Seteamos los datos obtenidos con la función datos_graficoComparación_Metodos() con el fin de obtener el mismo gráfico para poder analizarlo. 
+    """
     tests = ['instagram_famosos_grafo', 'mathworld_grafo', 'test_15_segundos', 'test_30_segundos', 'test_aleatorio', 'test_dosestrellas']
     paginas = [30, 10, 2000, 3000, 5, 12]
     links = [178, 33, 12000, 18000, 12, 22]
@@ -534,12 +537,3 @@ def graficoComparacion_Metodos():
     title.set_position([.0, 1.04])
     plt.show()
     
-####PROBAR EN EL LABO Y LUEGO BORRAR, EL DE 15 SEGUNDOS TARDA 30 Y NO SE QUE MÁS OPTIMIZAR
-    
-def calcularTiempoTest15seg():
-    W = leer_archivo('./tests/test_15_segundos.txt')
-    start_time = time.time()
-    calcularRanking(W, p=0.5)
-    end_time = time.time()
-    tiempoProcesamiento = (end_time-start_time)  
-    return tiempoProcesamiento
