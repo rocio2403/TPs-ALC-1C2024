@@ -537,3 +537,33 @@ def graficoComparacion_Metodos():
     title.set_position([.0, 1.04])
     plt.show()
     
+
+def numeroDeCondicionSegunP():
+    matrices, tests = leer_test()
+    
+    valores_p = np.linspace(0.1, 0.9, 9)
+    
+    numeros_de_condicion = []
+    
+    for W in matrices :
+        cond = []
+        for p in valores_p :            
+            p, W, e, D, z_t = componentes_Pagerank(W, p)
+            I = np.eye(W.shape[0])
+            M = I-p*(W@D)
+            cond.append(np.linalg.cond(M, 1))
+        numeros_de_condicion.append(cond)
+
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(valores_p, numeros_de_condicion[4], label='5 páginas', alpha=0.6, linestyle='-')
+    plt.plot(valores_p, numeros_de_condicion[0], label='30 páginas', alpha=0.6, linestyle='-')
+    plt.plot(valores_p, numeros_de_condicion[2], label='2000 páginas', alpha=0.6, linestyle='-')
+    plt.plot(valores_p, numeros_de_condicion[3], label='3000 páginas', alpha=0.6, linestyle='-')
+    
+    plt.xlabel('valores de p')
+    plt.ylabel('numero de condición de I-pWD')
+    plt.title('Número de condición según p y tamaño de la matriz')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
