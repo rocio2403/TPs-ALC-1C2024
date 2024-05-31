@@ -567,3 +567,22 @@ def numeroDeCondicionSegunP():
     plt.legend()
     plt.grid(True)
     plt.show()
+
+def condicion(p):
+    return (1 + p) / (1 - p)
+
+def numeroDeCondicion_graficoAsintotico():
+    # Generar valores para p desde 0 hasta 0.99 (muy cerca de 1, pero sin alcanzarlo)
+    valores_p = np.linspace(0.1, 0.99,10 )
+    numeros_de_condicion = condicion(valores_p)
+    
+    plt.figure(figsize=(10, 6))
+    
+    plt.plot(valores_p, numeros_de_condicion, label=r'$\frac{1 + p}{1 - p}$', color='b')
+    plt.axvline(x=1, color='r', linestyle='--', label=r'$p = 1$')
+    plt.xlabel('$p$')
+    plt.ylabel('Cota')
+    plt.title('Gráfico de la cota en función de p')
+    plt.legend()
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.show()
