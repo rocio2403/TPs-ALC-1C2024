@@ -8,7 +8,7 @@ Periodo. Primer Cuatrimestre 2024
 Tema:  Contenido nutricional de la Canasta Básica
 """
 import pandas as pd
-from inline_sql import sql, sql_val #me parece que mejor no
+from inline_sql import sql, sql_val
 
 
 """
@@ -31,3 +31,20 @@ tabla_nutricional = pd.read_csv(carpeta +  'tabla_nutricional.csv',delimiter= ';
 #CONSIGNA 1
 # Consigna 1.- Leer los datos del archivo tabla nutricional.csv. Completar las
 # celdas faltantes con ceros. Poner todos los datos en la misma unidad.
+
+#ponemos todo en minusculas
+# nan ponemos 0
+# pasamos de g a mg multiplicamos por 1000
+
+tabla_nutricional.iloc[:, 0] = tabla_nutricional.iloc[:, 0].str.lower()
+
+tabla_nutricional.iloc[:,:] = tabla_nutricional.iloc[:,:].fillna(0)
+
+columnas = tabla_nutricional.columns
+
+for columna in columnas:
+    if '(gr)' in columna:
+        tabla_nutricional[columna]=tabla_nutricional[columna]*1000
+        
+tabla_nutricional.columns = tabla_nutricional.columns.str.replace('(gr)', '(mg)')
+        
