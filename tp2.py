@@ -8,7 +8,7 @@ Periodo. Primer Cuatrimestre 2024
 Tema:  Contenido nutricional de la Canasta Básica
 """
 import pandas as pd
-from inline_sql import sql, sql_val
+from inline_sql import sql, sql_val #mejor no
 
 
 """
