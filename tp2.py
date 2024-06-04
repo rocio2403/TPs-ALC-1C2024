@@ -8,7 +8,7 @@ Periodo. Primer Cuatrimestre 2024
 Tema:  Contenido nutricional de la Canasta Básica
 """
 import pandas as pd
-from inline_sql import sql, sql_val #mejor no
+from inline_sql import sql, sql_val
 
 
 """
@@ -43,11 +43,11 @@ tabla_nutricional.iloc[:,:] = tabla_nutricional.iloc[:,:].fillna(0)
 columnas = tabla_nutricional.columns
 
 for columna in columnas:
-    if '(gr)' in columna:
-        tabla_nutricional[columna]=tabla_nutricional[columna]*1000
+    if '(mg)' in columna:
+        tabla_nutricional[columna]=tabla_nutricional[columna]/1000
         
-tabla_nutricional.columns = tabla_nutricional.columns.str.replace('(gr)', '(mg)')
-
+tabla_nutricional.columns = tabla_nutricional.columns.str.replace('(mg)','(gr)')
+        
 consumidores_libres = pd.read_csv(carpeta + 'consumidores_libres.csv' ,delimiter = ';')
 
 margenes_ingesta_nutrientes = pd.DataFrame({
@@ -64,6 +64,10 @@ margenes_ingesta_nutrientes = pd.DataFrame({
         '20 g'
     ]
 })
-# def dieta_margenes_oms(data):
-    
-        
+#la tabla 
+#las grasas totales son la suma de los acidos grasos
+def dieta_margenes_oms(data):
+    proteinas = data.filter(like ='Proteinas').sum().sum()
+    sodio = data.filter(like='Na').sum().sum()
+    grasas = data.filter(like = 'AG').sum().sum() + data['Grasas (gr)'].sum()
+    return proteinas,sodio, grasas
