@@ -64,21 +64,6 @@ carpeta =''
 tabla_nutricional = pd.read_csv(carpeta +  'tabla_nutricional.csv',delimiter= ';')
 consumidores_libres = pd.read_csv(carpeta + 'consumidores_libres.csv' ,delimiter = ';')
 
-#Creamos un dataframe de los márgenes de las metas de nutrientes por la OMS (2003)
-margenes_oms = pd.DataFrame({
-    'Factor alimentario': [
-        'Grasas totales', 'Ácidos grasos saturados', 'Ácidos grasos poliinsaturados (AGPI)',
-        'Ácidos grasos poliinsaturados n-6', 'Ácidos grasos poliinsaturados n-3', 'Ácidos grasos trans',
-        'Ácidos grasos monoinsaturados', 'Carbohidratos totales', 'Azúcares libres', 'Proteínas',
-        'Colesterol', 'Sodio', 'Frutas y verduras', 'Fibra alimentaria total', 'Polisacáridos no amiláceos (PNA)'
-    ],
-    'Meta (% de la energía total)': [
-        '15-30 %', '<10 %', '6-10 %', '5-8 %', '1-2 %', '<1 %', 'Por diferencia', 
-        '55-75 %', '<10 %', '10-15 %', '<300 mg/día', '2000 mg/día', '>= 400 g/día', '>25 g/día', 
-        '20 g'
-    ]
-})
-
 #Normalizamos la tabla
 tabla_nutricional = normalizar_tabla_nutricional(tabla_nutricional)
 
