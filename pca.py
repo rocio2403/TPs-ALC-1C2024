@@ -92,24 +92,32 @@ def componentes_principalesSVD(X, k):
     X_proyectado = U_k @ U_k.T @ X
     return X_proyectado
 
-
-def graficarProyeccion(X_proyectado, n_clusters=4):
+def graficarProyeccion(X_proyectado, alimentos, n_clusters=4):
     """
-    Grafica los alimentos como punto en el subespacio generado por las 2
+    Grafica los alimentos como puntos en el subespacio generado por las 2
     componentes principales, coloreando los puntos según sus clusters.
     """
     # Aplicamos KMeans para encontrar clusters
     kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X_proyectado)
     labels = kmeans.labels_
-
+    
+    # Crear DataFrame con el número de cluster, alimento y color
+    df_clusters = pd.DataFrame({
+        'Alimento': alimentos,
+        'Número de Cluster': labels,
+        'Color': [f'C{label}' for label in labels]  # Usar los colores de Matplotlib por defecto
+    })
+    
     plt.figure(figsize=(12, 8))
-    scatter = plt.scatter(X_proyectado[:, 0], X_proyectado[:, 1], c=labels, cmap='viridis',alpha =0.5)
+    scatter = plt.scatter(X_proyectado[:, 0], X_proyectado[:, 1], c=labels, cmap='viridis', alpha=0.5)
     plt.xlabel('Componente Principal 1')
     plt.ylabel('Componente Principal 2')
     plt.title('Análisis en Componentes Principales de la Canasta Básica')
     plt.colorbar(scatter)
     plt.grid(True)
     plt.show()
+    
+    return df_clusters
 
 # =============================================================================
 # SCRIPT (poner en celdas)
@@ -117,37 +125,20 @@ def graficarProyeccion(X_proyectado, n_clusters=4):
 
 carpeta = 'C:/Users/Rocio/Desktop/TPs-ALC-1C2024/TP2-ALC/'
 
-#Creamos dataframes con los datos en formato csv
-tabla_nutricional = pd.read_csv(carpeta +  'tabla_nutricional.csv', delimiter=';')
+# Creamos dataframes con los datos en formato csv
+tabla_nutricional = pd.read_csv(carpeta + 'tabla_nutricional.csv', delimiter=';')
 consumidores_libres = pd.read_csv(carpeta + 'consumidores_libres.csv', delimiter=';')
 
-#Normalizamos la tabla
+# Normalizamos la tabla
 tabla_nutricional = normalizar_tabla_nutricional(tabla_nutricional)
+alimentos = tabla_nutricional['Alimento'].values 
 
-#Reducimos la dimensionalidad de los datos mediante PCA
+# Reducimos la dimensionalidad de los datos mediante PCA
 matriz_nutricional = tabla_nutricional.iloc[:, 1:].values
 X_proyectado = componentes_principalesSVD(matriz_nutricional, 2)
 
-# Graficamos la proyección con los clusters
-graficarProyeccion(X_proyectado)
+# Graficamos la proyección con los clusters y obtenemos el DataFrame de clusters
+df_clusters = graficarProyeccion(X_proyectado, alimentos)
 
-
-
-    
-# =============================================================================
-# SCRIPT (poner en celdas)
-# =============================================================================
-
-carpeta = ''
-
-#Creamos dataframes con los datos en formato csv
-tabla_nutricional = pd.read_csv(carpeta +  'tabla_nutricional.csv',delimiter= ';')
-consumidores_libres = pd.read_csv(carpeta + 'consumidores_libres.csv' ,delimiter = ';')
-
-#Normalizamos la tabla
-tabla_nutricional = normalizar_tabla_nutricional(tabla_nutricional)
-
-#Reducimos la dimensionalidad de los datos mediante PCA
-matriz_nutricional = tabla_nutricional.iloc[:,1:].values
-X_proyectado = componentes_principalesSVD(matriz_nutricional, 2)
-graficarProyeccion(X_proyectado)
+# Imprimimos el DataFrame de clusters
+print(df_clusters)
