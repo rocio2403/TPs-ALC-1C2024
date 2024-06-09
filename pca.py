@@ -121,4 +121,5 @@ tabla_nutricional = normalizar_tabla_nutricional(tabla_nutricional)
 
 #Reducimos la dimensionalidad de los datos mediante PCA
 matriz_nutricional = tabla_nutricional.iloc[:,1:].values
-
+X_proyectado = componentes_principalesSVD(matriz_nutricional, 2)
+graficarProyeccion(X_proyectado)
