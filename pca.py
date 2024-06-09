@@ -91,20 +91,48 @@ def componentes_principalesSVD(X, k):
     # Proyectamos los datos en el subespacio generado por los primeros k vectores singulares izquierdos
     X_proyectado = U_k @ U_k.T @ X
     return X_proyectado
-    
-def graficarProyeccion(X_proyectado):
+
+
+def graficarProyeccion(X_proyectado, n_clusters=4):
     """
     Grafica los alimentos como punto en el subespacio generado por las 2
-    componentes principales
+    componentes principales, coloreando los puntos según sus clusters.
     """
+    # Aplicamos KMeans para encontrar clusters
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X_proyectado)
+    labels = kmeans.labels_
+
     plt.figure(figsize=(12, 8))
-    plt.scatter(X_proyectado[:, 0], X_proyectado[:, 1])
+    scatter = plt.scatter(X_proyectado[:, 0], X_proyectado[:, 1], c=labels, cmap='viridis',alpha =0.5)
     plt.xlabel('Componente Principal 1')
     plt.ylabel('Componente Principal 2')
     plt.title('Análisis en Componentes Principales de la Canasta Básica')
-    plt.legend()
+    plt.colorbar(scatter)
     plt.grid(True)
     plt.show()
+
+# =============================================================================
+# SCRIPT (poner en celdas)
+# =============================================================================
+
+carpeta = 'C:/Users/Rocio/Desktop/TPs-ALC-1C2024/TP2-ALC/'
+
+#Creamos dataframes con los datos en formato csv
+tabla_nutricional = pd.read_csv(carpeta +  'tabla_nutricional.csv', delimiter=';')
+consumidores_libres = pd.read_csv(carpeta + 'consumidores_libres.csv', delimiter=';')
+
+#Normalizamos la tabla
+tabla_nutricional = normalizar_tabla_nutricional(tabla_nutricional)
+
+#Reducimos la dimensionalidad de los datos mediante PCA
+matriz_nutricional = tabla_nutricional.iloc[:, 1:].values
+X_proyectado = componentes_principalesSVD(matriz_nutricional, 2)
+
+# Graficamos la proyección con los clusters
+graficarProyeccion(X_proyectado)
+
+
+
     
 # =============================================================================
 # SCRIPT (poner en celdas)
