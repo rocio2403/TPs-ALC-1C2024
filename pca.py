@@ -64,7 +64,7 @@ def componentes_principalesSVD(X, k):
     """
     Dada una matriz X, computa su factorización SVD y retorna la proyección
     sobre el subespacio generado por los primeros k vectores singulares izquierdos
-    de X y las matrices truncadas de la SVD U_k y Vt_k.
+    de X y la martriz truncada de la SVD Vt_k.
     """
     # Centramos los vectores columna (características) según sus promedios
     n, d = X.shape
@@ -81,17 +81,14 @@ def componentes_principalesSVD(X, k):
     avecs = avecs[:, indices_ordenados]
     # Seleccionamos los primeros k vectores singulares derechos de X
     Vt_k = avecs[:, :k]    
-    # Calculamos los primeros k vectores singulares izquierdos de X
-    U_k = np.dot(X, Vt_k)
-    U_k /= np.linalg.norm(U_k, axis=0)    
     # Matriz de reflexión en el eje de la primer componente
     R1 = np.array([[1, 0], [0, -1]])
     # Proyectamos los datos en el subespacio generado por los primeros k vectores singulares izquierdos
     X_proyectado = X @ Vt_k @ R1 
-    return X_proyectado, U_k, Vt_k
+    return X_proyectado, Vt_k
 
 
-def graficarProyeccion(X_proyectado, alimentos, n_clusters=4):
+def graficarProyeccion(X_proyectado, alimentos, titulo, n_clusters=4):
     """
     Grafica los alimentos como puntos en el subespacio generado por las 2
     componentes principales, coloreando los puntos según sus clusters.
@@ -111,7 +108,7 @@ def graficarProyeccion(X_proyectado, alimentos, n_clusters=4):
     scatter = plt.scatter(X_proyectado[:, 0], X_proyectado[:, 1], c=labels, cmap='viridis', alpha=0.5)
     plt.xlabel('Componente Principal 1')
     plt.ylabel('Componente Principal 2')
-    plt.title('Análisis en Componentes Principales de la Canasta Básica')
+    plt.title(titulo)
     plt.colorbar(scatter)
     plt.grid(True)
     plt.show()
@@ -212,10 +209,12 @@ def proyectar(Y, proyector):
     n, d = Y.shape
     m=np.mean(Y, axis=1)
     Y = Y - np.tile(m.reshape((len(m), 1)), (1, d))
-
+    # Matriz de reflexión en el eje de la primer componente
+    R1 = np.array([[1, 0], [0, -1]])
     # Proyectamos en el subespacio de las primeras k componentes principales
-    Y_proyectado = Y @ proyector
-    return Y_proyectado    
+    Y_proyectado = Y @ proyector @ R1
+    return Y_proyectado
+    
 # =============================================================================
 # SCRIPT (poner en celdas)
 # =============================================================================
@@ -232,10 +231,10 @@ alimentos = tabla_nutricional['Alimento'].values
 
 # Reducimos la dimensionalidad de los datos (X) mediante PCA
 matriz_nutricional = tabla_nutricional.iloc[:, 1:].values
-X_proyectado, U_2, Vt_2= componentes_principalesSVD(matriz_nutricional, 2)
+X_proyectado, Vt_2= componentes_principalesSVD(matriz_nutricional, 2)
 
 # Graficamos la proyección con los clusters y obtenemos el DataFrame de clusters
-df_clusters = graficarProyeccion(X_proyectado, alimentos)
+df_clusters = graficarProyeccion(X_proyectado, alimentos, 'Análisis en Componentes Principales de la Canasta Básica')
 graficos_cluster()
 
 # Proyectamos los alimentos de consumidores_libres (Y) en el subespacio del PCA anterior
@@ -246,7 +245,6 @@ proyector =  Vt_2
 Y_proyectado = proyectar(Y, proyector)
 
 # Graficamos la proyección con los clusters y obtenemos el DataFrame de clusters
-df_clusters2 = graficarProyeccion(Y_proyectado, alimentos2)
-graficos_cluster()
+df_clusters2 = graficarProyeccion(Y_proyectado, alimentos2, "Análisis de Componentes Principales de Alimentos de 'Consumidores Libres'")
 
 
