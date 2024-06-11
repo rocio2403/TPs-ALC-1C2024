@@ -144,7 +144,8 @@ def graficos_cluster():
     df_combined = pd.concat([grupo1, grupo2, grupo3, grupo4])
         
     promedios_grupos = df_combined.groupby('Número de Cluster')[macronutrientes].mean().reset_index()
-        
+    promedios_grupos['Número de Cluster'] += 1
+       
     sns.set(style="darkgrid")
         
     fig, axes = plt.subplots(2, 3, figsize=(18, 10), sharey=False)
