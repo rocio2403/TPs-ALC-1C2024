@@ -229,11 +229,9 @@ regresion_y_grafico(df_grasas, 'Regresión Lineal de Precios por Grasas')
 regresion_y_grafico(df_carne, 'Regresión Lineal de Precios por Carne')
 
 
-def minimos_cuadrados(x,y):
-        
-  
+
+def minimos_cuadrados(x, y):
     A = np.vstack([x, np.ones(len(x))]).T
-    
     ATA = A.T @ A
     ATy = A.T @ y
     
@@ -241,25 +239,53 @@ def minimos_cuadrados(x,y):
     coef = np.linalg.solve(ATA, ATy)
     m, b = coef
     
+    return m, b
 
-    plt.plot(x, y, 'o', label='Datos')
-    plt.plot(x, m * x + b, '-', label='mínimos cuadrados')
+def grafico_promedio_nutrientes(grasas, hc, proteinas): 
+    precios_promedio_grasas = []
+    precios_promedio_hc = []
+    precios_promedio_proteinas = []
     
-    # Configurar etiquetas y título
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.title('Mínimos Cuadrados')
+    for fecha in meses:
+        # Calcular el precio promedio por gramo de grasas
+        precio_promedio_grasas = grasas[fecha].mean()
+        precios_promedio_grasas.append(precio_promedio_grasas)
+               
+                # Calcular el precio promedio por gramo de HC
+        precio_promedio_hc = hc[fecha].mean()
+        precios_promedio_hc.append(precio_promedio_hc)
+               
+                # Calcular el precio promedio por gramo de proteínas
+        precio_promedio_proteinas = proteinas[fecha].mean()
+        precios_promedio_proteinas.append(precio_promedio_proteinas)
     
-    # Configurar la leyenda fuera del gráfico
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    # Crear el gráfico de dispersión y ajuste por mínimos cuadrados
+    plt.figure(figsize=(12, 8))
     
-    # Mostrar el gráfico
+    x = np.arange(len(meses))
+    m, b = minimos_cuadrados(x, precios_promedio_grasas)
+    plt.scatter(x, precios_promedio_grasas, label='Grasas', color='blue')
+    plt.plot(x, m * x + b, '-', label='Grasas (Regresión)', color='blue')
+    
+    m, b = minimos_cuadrados(x, precios_promedio_hc)
+    plt.scatter(x, precios_promedio_hc, label='HC', color='green')
+    plt.plot(x, m * x + b, '-', label='HC (Regresión)', color='green')
+    
+    m, b = minimos_cuadrados(x, precios_promedio_proteinas)
+    plt.scatter(x, precios_promedio_proteinas, label='Proteínas', color='red')
+    plt.plot(x, m * x + b, '-', label='Proteínas (Regresión)', color='red')
+    
+    plt.xlabel('Fecha')
+    plt.ylabel('Precio Promedio por Gramo de MacroNutriente')
+    plt.title('Precio Promedio por Gramo de Macronutriente en funcion del tiempo')
+    plt.xticks(x, meses, rotation=45)
+    plt.legend()
+    plt.grid(True)
+    
+   
     plt.show()
 #veo si funca
-    
-# x = np.array([1, 2, 3, 4, 5])
-# y = np.array([2, 3, 5, 4, 6])
-# minimos_cuadrados(x, y)    
+grafico_promedio_nutrientes(df_grasas, df_hc, df_proteinas)  
 
 
 
