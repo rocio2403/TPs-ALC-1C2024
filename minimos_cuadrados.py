@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 20 08:52:59 2024
+
+@author: Rocio
+"""
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
