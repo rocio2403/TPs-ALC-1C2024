@@ -288,6 +288,30 @@ def grafico_promedio_nutrientes(grasas, hc, proteinas):
 grafico_promedio_nutrientes(df_grasas, df_hc, df_proteinas)  
 
 
+def aumento_porcentual(valor_inicial, valor_final):
+    return ((valor_final - valor_inicial) / valor_inicial) * 100
+
+#ahora armo la tabla  con los aumentos
+
+prom_inicial_pr = df_proteinas['31/12/2023'].mean()
+prom_final_pr = df_proteinas['30/4/2024'].mean()
+
+
+prom_inicial_gr = df_grasas['31/12/2023'].mean()
+prom_final_gr = df_grasas['30/4/2024'].mean()
+
+
+prom_inicial_hc = df_hc['31/12/2023'].mean()
+prom_final_hc = df_hc['30/4/2024'].mean()
+
+aumentos_nutrientes = {'Proteinas':aumento_porcentual(prom_inicial_pr, prom_final_pr),
+                       'Grasas' :aumento_porcentual(prom_inicial_gr, prom_final_gr),
+                       'Carbohidratos (HC)': aumento_porcentual(prom_inicial_hc, prom_final_hc)
+    
+    }
+aumentos_nutrientes = pd.DataFrame(aumentos_nutrientes,index=[0])
+print(aumentos_nutrientes)
+
 
 
 
