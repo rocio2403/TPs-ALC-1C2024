@@ -119,7 +119,7 @@ casos_excepcionales ={
     'fideos secos': 'fideos guiseros',
     'harina trigo': 'harina de trigo',
     'leche fluida entera': 'leche c/vit.fort',
-    'pan': 'pan fresco',
+    'pan frances': 'pan fresco',
        }
 carnes = ['asado','bola de lomo','carne picada','paleta']
 
@@ -130,13 +130,11 @@ for _, row in nutricional_filtrada.iterrows():
     gr_hc = row['HC (gr)']
     gr_proteinas = row['Proteinas (gr)']
     gr_grasas = row['Grasas (gr)']
-    
     # Buscar alimento en consumidores libres
     if alimento in casos_excepcionales.keys():
        alimento =  casos_excepcionales[alimento]
       
     match = consumidores_libres[consumidores_libres['PRODUCTOS'].str.contains(alimento)]
-  
     if not match.empty: # para las coincidencias
         cant_con_precio = match.iloc[0]['Cantidad'] #agarra la cantidad  para la cual tenemos precio
         precios = match.iloc[0][meses].values
@@ -149,10 +147,7 @@ for _, row in nutricional_filtrada.iterrows():
             y = (precios*x)/cant_con_precio
             #ahora saco para un gramo
             precio_hc = y/x
-            if alimento in carnes:
-                precios_carne[alimento] = precio_hc
-            else:
-               precios_hc[alimento] = precio_hc
+            precios_hc[alimento] = precio_hc
         if gr_proteinas > 0:
             #aplico regla de tres
             x = (gr_proteinas*cant_con_precio)/cant_ali
@@ -160,11 +155,7 @@ for _, row in nutricional_filtrada.iterrows():
             y = (precios*x)/cant_con_precio
             #ahora saco para un gramo
             precio_proteinas = y/x
-            if alimento in carnes:
-                precios_carne[alimento] = precio_proteinas
-            else:
-            
-                precios_proteinas[alimento] = precio_proteinas
+            precios_proteinas[alimento] = precio_proteinas
         if gr_grasas > 0:
             #aplico regla de tres
             x = (gr_grasas*cant_con_precio)/cant_ali
@@ -172,18 +163,12 @@ for _, row in nutricional_filtrada.iterrows():
             y = (precios*x)/cant_con_precio
             #ahora saco para un gramo
             precio_grasas = y/x
-            if alimento in carnes:
-                precios_carne[alimento] = precio_grasas
-            else:
-            
-                precios_grasas[alimento] = precio_grasas
+            precios_grasas[alimento] = precio_grasas
  
 
 df_hc = pd.DataFrame(precios_hc, index=meses).T
 df_proteinas = pd.DataFrame(precios_proteinas, index=meses).T
 df_grasas = pd.DataFrame(precios_grasas, index=meses).T
-df_carne = pd.DataFrame(precios_carne, index=meses).T
-
 
 # Función para realizar la regresión lineal y graficar
 def regresion_y_grafico(df, titulo):
@@ -226,9 +211,6 @@ def regresion_y_grafico(df, titulo):
 regresion_y_grafico(df_hc, 'Regresión Lineal de Precios por HC')
 regresion_y_grafico(df_proteinas, 'Regresión Lineal de Precios por Proteínas')
 regresion_y_grafico(df_grasas, 'Regresión Lineal de Precios por Grasas')
-regresion_y_grafico(df_carne, 'Regresión Lineal de Precios por Carne')
-
-
 
 def minimos_cuadrados(x, y):
     A = np.vstack([x, np.ones(len(x))]).T
@@ -287,31 +269,86 @@ def grafico_promedio_nutrientes(grasas, hc, proteinas):
 #veo si funca
 grafico_promedio_nutrientes(df_grasas, df_hc, df_proteinas)  
 
+#%%
+def calcular_aumentos(df):
+    mes_indices = np.array([0, 1, 2, 3, 4])  # Asume que tienes 5 meses de datos
+    aumentos = {}
 
-def aumento_porcentual(valor_inicial, valor_final):
-    return ((valor_final - valor_inicial) / valor_inicial) * 100
+    for alimento in df.index:
+        precios = df.loc[alimento].values.astype(np.float64)  
+        
+        A = np.vstack([mes_indices, np.ones(len(mes_indices))]).T
+        ATA = A.T @ A
+        ATy = A.T @ precios
+        
+        coef = np.linalg.solve(ATA, ATy)
+        m, b = coef
+        
+        aumentos[alimento] = m
 
-#ahora armo la tabla  con los aumentos
+    return aumentos
 
-prom_inicial_pr = df_proteinas['31/12/2023'].mean()
-prom_final_pr = df_proteinas['30/4/2024'].mean()
+aumentos_hc = calcular_aumentos(df_hc)
+aumentos_proteinas = calcular_aumentos(df_proteinas)
+aumentos_grasas = calcular_aumentos(df_grasas)
+#creo dataframes
+
+aumentos_hc = pd.DataFrame(list(aumentos_hc.items()), columns=['Alimento', 'Aumento HC'])
+aumentos_proteinas = pd.DataFrame(list(aumentos_proteinas.items()), columns=['Alimento', 'Aumento Proteínas'])
+aumentos_grasas = pd.DataFrame(list(aumentos_grasas.items()), columns=['Alimento', 'Aumento Grasas'])
+
+aumentos_nutrientes = pd.merge(aumentos_hc, aumentos_proteinas, on='Alimento', how='outer')
+aumentos_nutrientes = pd.merge(aumentos_nutrientes, aumentos_grasas, on='Alimento', how='outer')
+
+# Llenar NaN con 0
+aumentos_nutrientes = aumentos_nutrientes.fillna(0)
 
 
-prom_inicial_gr = df_grasas['31/12/2023'].mean()
-prom_final_gr = df_grasas['30/4/2024'].mean()
+"""
+Consigna 6.- Comparar el aumento de la carne en comparaci´on con los otros
+rubros. Si la gente consume ese porcentaje menos de carne, como queda la ingesta
+individual con respecto a la tabla de metas de la OMS?"
 
+"""
+#utilizo aumentos para cada alimento de consumidores libres y luego hago grafiquito de barras
+#modifico calcular aumento para poder usarla con consumidores libres
 
-prom_inicial_hc = df_hc['31/12/2023'].mean()
-prom_final_hc = df_hc['30/4/2024'].mean()
+def calcular_aumentos2(df):
+    mes_indices = np.array([0, 1, 2, 3, 4])  # Asume que tienes 5 meses de datos
+    aumentos = {}
 
-aumentos_nutrientes = {'Proteinas':aumento_porcentual(prom_inicial_pr, prom_final_pr),
-                       'Grasas' :aumento_porcentual(prom_inicial_gr, prom_final_gr),
-                       'Carbohidratos (HC)': aumento_porcentual(prom_inicial_hc, prom_final_hc)
-    
-    }
-aumentos_nutrientes = pd.DataFrame(aumentos_nutrientes,index=[0])
-print(aumentos_nutrientes)
+    for producto in df['PRODUCTOS']:
+        precios = df[df['PRODUCTOS'] == producto].iloc[0, 2:].values.astype(np.float64)
+        
+        A = np.vstack([mes_indices, np.ones(len(mes_indices))]).T
+        ATA = A.T @ A
+        ATy = A.T @ precios
+        
+        coef = np.linalg.solve(ATA, ATy)
+        m, b = coef
+        
+        aumentos[producto] = m
 
+    return aumentos
+
+# Calcular los aumentos
+aumentos_productos = calcular_aumentos2(consumidores_libres)
+aumentos_productos = pd.DataFrame(list(aumentos_productos.items()), columns=['Productos', 'Aumento'])
+
+# ordenamos para una mejor visualizacion
+aumentos_productos = aumentos_productos.sort_values(by='Aumento', ascending=False)
+
+# Crear el gráfico de barras
+plt.figure(figsize=(12, 8))
+# Lista de colores para las barras (puedes definir tus propios colores aquí)
+colores = ['#1f77b4', '#aec7e8', '#ff7f0e', '#2ca02c', '#98df8a']
+
+plt.barh(aumentos_productos['Productos'], aumentos_productos['Aumento'], color=colores)
+plt.xlabel('Aumento')
+plt.ylabel('Producto')
+plt.title('Aumento vs Alimento')
+plt.grid(True)
+plt.show()
 
 
 
