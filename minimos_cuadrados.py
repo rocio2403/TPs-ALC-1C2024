@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jun 20 08:52:59 2024
@@ -18,6 +19,7 @@ def normalizar_tabla_nutricional(tabla_nutricional):
     miligramos a gramos.
     """
     tabla_nutricional = tabla_nutricional.fillna(0)
+    tabla_nutricional['Alimento'] = tabla_nutricional['Alimento'].str.strip()
     columnas_mg = [col for col in tabla_nutricional.columns if 'mg' in col]
     tabla_nutricional[columnas_mg] /= 1000
     tabla_nutricional.columns = tabla_nutricional.columns.str.replace('mg', 'gr', regex=True)
@@ -27,7 +29,7 @@ def normalizar_tabla_nutricional(tabla_nutricional):
 #Creamos dataframes con los datos en formato csv
 tabla_nutricional = pd.read_csv('tabla_nutricional.csv',delimiter= ';')
 consumidores_libres = pd.read_csv('consumidores_libres.csv' ,delimiter = ';')
-
+consumidores_libres['PRODUCTOS'] = consumidores_libres['PRODUCTOS'].str.strip()
 #Normalizamos la tabla
 tabla_nutricional = normalizar_tabla_nutricional(tabla_nutricional)
 
@@ -312,52 +314,178 @@ individual con respecto a la tabla de metas de la OMS?"
 #utilizo aumentos para cada alimento de consumidores libres y luego hago grafiquito de barras
 #modifico calcular aumento para poder usarla con consumidores libres
 
-def calcular_aumentos2(df):
+def calcular_aumentos_productos(df):
     mes_indices = np.array([0, 1, 2, 3, 4])  # Asume que tienes 5 meses de datos
     aumentos = {}
 
     for producto in df['PRODUCTOS']:
         precios = df[df['PRODUCTOS'] == producto].iloc[0, 2:].values.astype(np.float64)
-        
+
         A = np.vstack([mes_indices, np.ones(len(mes_indices))]).T
         ATA = A.T @ A
         ATy = A.T @ precios
-        
+
         coef = np.linalg.solve(ATA, ATy)
         m, b = coef
-        
+
         aumentos[producto] = m
 
     return aumentos
 
-# Calcular los aumentos
-aumentos_productos = calcular_aumentos2(consumidores_libres)
+aumentos_productos = calcular_aumentos_productos(consumidores_libres)
 aumentos_productos = pd.DataFrame(list(aumentos_productos.items()), columns=['Productos', 'Aumento'])
+print(aumentos_productos.head())
 
-# ordenamos para una mejor visualizacion
 aumentos_productos = aumentos_productos.sort_values(by='Aumento', ascending=False)
-carnes = ['asado','bola de lomo','carne picada','paleta']
+carnes = ['asado','bola de lomo','carne picada comun','paleta']
 
-# Crear el gráfico de barras
+
 plt.figure(figsize=(12, 8))
 colores = ['purple' if producto not in carnes else 'green' for producto in aumentos_productos['Productos']]
 
 plt.barh(aumentos_productos['Productos'], aumentos_productos['Aumento'], color=colores)
 plt.xlabel('Aumento')
 plt.ylabel('Producto')
-plt.title('Aumento vs Alimento')
+plt.title('Aumento de Productos con Cuadrados Minimos vs Alimento')
 plt.grid(True)
 plt.show()
 
 
 
+#%%
+
+def calcular_aumento_porcentual(df, fecha_inicio, fecha_fin):
+    # Calcula el aumento porcentual para cada fila entre las columnas especificadas
+    df['Aumento %'] = ((df[fecha_fin] - df[fecha_inicio]) / df[fecha_inicio]) * 100
+    
+    # Crea un nuevo DataFrame solo con las columnas 'PRODUCTOS' y 'Aumento %'
+    df_resultado = df[['PRODUCTOS', 'Aumento %']].copy()
+    
+    return df_resultado
+
+aumento_porcentual_productos = calcular_aumento_porcentual(consumidores_libres.copy(), '31/12/2023', '30/4/2024')
 
 
+aumento_porcentual_productos = aumento_porcentual_productos.sort_values(by='Aumento %', ascending=False)
+carnes = ['asado', 'bola de lomo', 'carne picada comun', 'paleta']
+
+plt.figure(figsize=(12, 8))
+colores = ['green' if producto not in carnes else 'lightblue' 
+           for producto in aumento_porcentual_productos['PRODUCTOS']]
+plt.barh(aumento_porcentual_productos['PRODUCTOS'], aumento_porcentual_productos['Aumento %'], color=colores)
+plt.xlabel('Aumento %')
+plt.ylabel('Producto')
+plt.title('Aumento porcentual de Productos vs Alimento')
+plt.grid(True)
+plt.show()
+
+#%%
+
+"""
+Si la gente consume ese porcentaje menos de carne, como queda la ingesta
+individual con respecto a la tabla de metas de la OMS?"
+"""
+#extraigo el porcentaje de aumentos de la carne
+carnes = ['asado', 'bola de lomo', 'carne picada','paleta ']
+
+# Filtrar el DataFrame para los alimentos en la lista 'carnes'
+carnes_df = nutricional_filtrada[nutricional_filtrada['Alimento'].isin(carnes)]
 
 
+carnes = ['asado', 'bola de lomo', 'carne picada comun','paleta ']
 
+#extraigo el porcentaje 
+carnes_porcentaje = aumento_porcentual_productos[aumento_porcentual_productos['PRODUCTOS'].isin(carnes)]
 
+#%%
 
+# Lista de nombres de carne con porcentaje
+carnes = ['asado', 'bola de lomo', 'carne picada comun', 'paleta']
+
+# Suponiendo que tienes cargados los dataframes aumento_porcentual_productos y tabla_nutricional
+
+# Diccionario para manejar nombres similares
+similares = {'carne picada comun': 'carne picada ', 'paleta ': 'paleta'}
+
+# Extraer el porcentaje de aumento para los productos de carne
+carnes_porcentaje = aumento_porcentual_productos[aumento_porcentual_productos['PRODUCTOS'].isin(carnes)]
+
+# Crear una copia de la tabla nutricional reducida
+cba_reducida = tabla_nutricional.copy()
+
+# Iterar sobre cada fila del dataframe de aumento porcentual
+for index, row in carnes_porcentaje.iterrows():
+    alimento = row['PRODUCTOS']
+    aumento_porcentaje = row['Aumento %']
+    
+    # Verificar si el alimento está en el diccionario de nombres similares
+    if alimento in similares:
+        alimento = similares[alimento]
+    
+    # Buscar el alimento en cba_reducida y aplicar la reducción
+    mask = cba_reducida['Alimento'].str.strip() == alimento.strip()
+    
+    if mask.any():
+        # Calcular el factor de reducción
+        factor_reduccion = (100 - aumento_porcentaje) / 100.0
+        
+        # Reducir los valores en las columnas relevantes
+        cba_reducida.loc[mask, 'Cantidad (gr/ml)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'HC (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'Proteinas (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'Grasas (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'Na (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'Ca (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'Fe (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'Azucares Libres (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'AGS (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'AGNI (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'AG p (gr)'] *= factor_reduccion
+        cba_reducida.loc[mask, 'Fibra (gr)'] *= factor_reduccion
+
+# Verificar el resultado
+print(cba_reducida.head())
+
+#verificamos si cumple
+def evaluarCumplimiento_dieta_margenes(data):
+    """
+    Evalúa si las cantidades de los principales elementos de la dieta, proteínas,
+    carbohidratos, grasas, sodio, fibra, frutas y verduras, cumple los márgenes
+    de ingesta de la OMS (2750kcal/Dia).
+
+    """
+    #Extraemos manualmente las frutas y verduras en la tabla nutricional
+    frutas_verduras_lista = ['Acelga', 'Zanahoria', 'Tomate', 'Lechuga', 'Cebolla', 'Zapallo', 'Manzana', 'Naranja', 'Mandarina', 'pera', 'Banana', 'Papa', 'Batata']
+
+    #Calculamos las cantidades totales
+    proteinas = data['Proteinas (gr)'].sum()
+    carbohidratos = data['HC (gr)'].sum()
+    grasas = data['Grasas (gr)'].sum()
+    sodio = data['Na (gr)'].sum()
+    fibra = data['Fibra (gr)'].sum()
+    frutas_verduras = data[data['Alimento'].isin(frutas_verduras_lista)]['Cantidad (gr/ml)'].sum()
+
+    #Comparamos las cantidades totales con los márgenes
+    proteinas_cumple = 10 <= ((proteinas*4)/2750)*100 <= 15
+    carbohidratos_cumple = 55 <= ((carbohidratos*4)/2750)*100 <=75
+    grasas_cumple = 15 <= ((grasas*9)/2750)*100 <= 30
+    sodio_cumple = sodio <= 2
+    fibra_cumple = fibra > 25
+    frutas_verduras_cumple = frutas_verduras >= 400
+    print(f'Grasas cumple : {grasas_cumple}')
+    print(f'HC cumple : {carbohidratos_cumple}')
+    print(f'Proteinas cumple : {proteinas_cumple}')
+    print(f'Sodio cumple : {sodio_cumple}')
+    print(f'Fibra cumple : {fibra_cumple}')
+    print(f'Frutas y verduras cumplen : {frutas_verduras_cumple}')
+
+    cumple = proteinas_cumple and carbohidratos_cumple and grasas_cumple and sodio_cumple and fibra_cumple and frutas_verduras_cumple
+
+    return 'Cumple los márgenes' if cumple else 'No cumple los márgenes'
+
+evaluarCumplimiento_dieta_margenes(cba_reducida)
+print('+'*50)
+evaluarCumplimiento_dieta_margenes(tabla_nutricional)
 
 
 
