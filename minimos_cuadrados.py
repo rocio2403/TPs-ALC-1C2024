@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 20 08:52:59 2024
-
-@author: Rocio
-"""
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -121,7 +115,6 @@ casos_excepcionales ={
     'leche fluida entera': 'leche c/vit.fort',
     'pan frances': 'pan fresco',
        }
-carnes = ['asado','bola de lomo','carne picada','paleta']
 
 # Iterar sobre cada alimento en la tabla nutricional
 for _, row in nutricional_filtrada.iterrows():
@@ -337,11 +330,11 @@ aumentos_productos = pd.DataFrame(list(aumentos_productos.items()), columns=['Pr
 
 # ordenamos para una mejor visualizacion
 aumentos_productos = aumentos_productos.sort_values(by='Aumento', ascending=False)
+carnes = ['asado','bola de lomo','carne picada','paleta']
 
 # Crear el gráfico de barras
 plt.figure(figsize=(12, 8))
-# Lista de colores para las barras (puedes definir tus propios colores aquí)
-colores = ['#1f77b4', '#aec7e8', '#ff7f0e', '#2ca02c', '#98df8a']
+colores = ['purple' if producto not in carnes else 'green' for producto in aumentos_productos['Productos']]
 
 plt.barh(aumentos_productos['Productos'], aumentos_productos['Aumento'], color=colores)
 plt.xlabel('Aumento')
@@ -349,6 +342,13 @@ plt.ylabel('Producto')
 plt.title('Aumento vs Alimento')
 plt.grid(True)
 plt.show()
+
+
+
+
+
+
+
 
 
 
