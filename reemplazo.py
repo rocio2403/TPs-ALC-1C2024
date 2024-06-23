@@ -194,3 +194,33 @@ reducida.loc[reducida['Alimento'] == 'carnes', ['Cantidad (gr/ml)', 'HC (gr)', '
 
 
 
+fila_original = nutricional_filtrada[nutricional_filtrada['Alimento'] == 'carnes'].iloc[:,1:]
+fila_reducida = reducida[reducida['Alimento'] == 'carnes'].iloc[:,1:]
+
+diferencia_filas = fila_original - fila_reducida
+
+print("Diferencia entre filas 'carnes':")
+print(diferencia_filas)
+
+
+#filtremos ahora los productos que pueden reemplazar
+
+limites = diferencia_filas.iloc[0].to_dict()
+
+# Filtrar las filas del dataframe reducida que cumplan con las condiciones
+alimentos_disponibles= reducida[
+   (reducida['HC (gr)'] <= limites['HC (gr)']) &
+    (reducida['Proteinas (gr)'] <= limites['Proteinas (gr)']) &
+    (reducida['Grasas (gr)'] <= limites['Grasas (gr)']) &
+    (reducida['Na (gr)'] <= limites['Na (gr)']) &
+    (reducida['Ca (gr)'] <= limites['Ca (gr)']) &
+    (reducida['Fe (gr)'] <= limites['Fe (gr)']) &
+    (reducida['Azucares Libres (gr)'] <= limites['Azucares Libres (gr)']) &
+    (reducida['AGS (gr)'] <= limites['AGS (gr)']) &
+    (reducida['AGNI (gr)'] <= limites['AGNI (gr)']) &
+    (reducida['AG p (gr)'] <= limites['AG p (gr)']) &
+    (reducida['Fibra (gr)'] <= limites['Fibra (gr)'])
+]
+
+
+
