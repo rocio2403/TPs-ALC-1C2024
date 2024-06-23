@@ -715,6 +715,8 @@ plt.show()
 
 #%%
 
+#%%
+
 """
 Si la gente consume ese porcentaje menos de carne, como queda la ingesta
 individual con respecto a la tabla de metas de la OMS?"
@@ -730,6 +732,8 @@ carnes = ['asado', 'bola de lomo', 'carne picada comun','paleta ']
 
 #extraigo el porcentaje 
 carnes_porcentaje = aumento_porcentual_productos[aumento_porcentual_productos['PRODUCTOS'].isin(carnes)]
+resultado = carnes_porcentaje['Aumento %'].mean()
+print(f'El porcentaje de aumento de la carne es: {resultado.round(2)}%')
 
 #%%
 
@@ -743,6 +747,8 @@ similares = {'carne picada comun': 'carne picada '}
 
 # Extraer el porcentaje de aumento para los productos de carne
 carnes_porcentaje = aumento_porcentual_productos[aumento_porcentual_productos['PRODUCTOS'].isin(carnes)]
+resultado = carnes_porcentaje['Aumento %'].mean()
+print(f'El porcentaje de aumento de la carne es: {resultado.round(2)}%')
 
 # Crear una copia de la tabla nutricional reducida
 cba_reducida = tabla_nutricional.copy()
@@ -777,5 +783,106 @@ for index, row in carnes_porcentaje.iterrows():
         cba_reducida.loc[mask, 'AG p (gr)'] *= factor_reduccion
         cba_reducida.loc[mask, 'Fibra (gr)'] *= factor_reduccion
 
-resultado = carnes_porcentaje['Aumento %'].mean()
-print(f'El porcentaje de aumento de la carne es: {resultado.round(2)}%')
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%
+#        CONSIGNA 7 
+ 
+"""
+En este caso vamos a utilizar el dominio generado por ACP para lo siguiente.
+Consigna 7.-
+Proponer dos alimentos de la tabla 3 (consumidores libres)
+ que lleguen a reemplazar la
+disminuci´on del 18.5 % de la carne sin perder valor nutricional. 
+Corroborar con la tabla de metas de la OMS la dieta diaria obtenida.
+ Adem´as, se pone como restricci´on en la elecci´on, que el precio de los alimentos 
+de reemplazo debe ser menor al 50 % del aumento de la carne.
+"""
+
+#como tengo que usar la tabla tres(lad e consumidores libres, utilizo nutricional_filtrada)
+#la proyecto en acp
+#trabajo con df_clusters
+
+"""
+hacer el 18.5 porceinto de los valores nutricionales que aporta la carne y ver
+que alimentos pueden reemplazar esa cantidad
+
+tomar el porcetnaje del porcetaje
+agarras el precio de la carne, ves cuanto es el 41,47 y del resultado tomo el 50%
+filtro los alimentos cuyo precio este debajo de eso y hago un segundo filtro con los que tengan los valores nutriiconales necesarios
+el acp reduce los valores nutriiconales que tomamos
+"""
+
+"""
+Consigna 7: Reemplazo dietario de la carne
+Objetivo: Proponer dos alimentos de la tabla 3 que reemplacen la disminución del 18.5% del consumo de carne sin perder valor nutricional, y que el precio de estos alimentos sea menor al 50% del aumento de la carne.
+
+Pasos:
+
+Calcular la disminución del consumo de carne:
+   18.5% menos de carne (por ejemplo, si originalmente consumías 1000g de carne, ahora consumirías 815g).
+Determinar la cantidad de nutrientes que se dejan de consumir:
+    
+Calcular los nutrientes que aporta la cantidad de carne que se dejará de consumir.
+Buscar alimentos de reemplazo en la tabla 3:
+Seleccionar alimentos que aporten nutrientes similares a los que se pierden por la reducción de carne.
+Asegurarse que el costo de los alimentos seleccionados sea menor al 50% del aumento del precio de la carne.
+4.Verificar la dieta diaria obtenida con la tabla de metas de la OMS:
+Asegurarse que la nueva combinación de alimentos cumple con las metas nutricionales diarias.
+"""
+
+# Lista de nombres de carne con porcentaje
+carnes = ['asado', 'bola de lomo', 'carne picada', 'paleta ']
+
+# primero disminuyo un 18,5 porciento  la carne
+
+
+
+df_nutricional_carne_redu = tabla_nutricional.copy()
+
+# Iterar sobre cada alimento en la lista
+for carne in carnes:
+    mask = df_nutricional_carne_redu['Alimento'].str.contains(carne, case=False, regex=False)
+    df_nutricional_carne_redu.loc[mask, df_nutricional_carne_redu.columns[1:]] *= 0.815
+
+#ahora veamos cuanto es la diferencia de nutrientes al hacer esta disminucion
+mask_original = tabla_nutricional['Alimento'].str.contains('|'.join(carnes), case=False, regex=True)
+mask_redu = df_nutricional_carne_redu['Alimento'].str.contains('|'.join(carnes), case=False, regex=True)
+
+# Sumar los valores de cada columna para los alimentos de la lista 'carnes' en ambos DataFrames :)
+suma_original = nutricional_filtrada.loc[mask_original, nutricional_filtrada.columns[1:]].sum()
+suma_redu = df_nutricional_carne_redu.loc[mask_redu, df_nutricional_carne_redu.columns[1:]].sum()
+
+# Calcular la diferencia
+#VEMOS CUANTO MENOS SE CONSUME
+nutrientes_a_compensar= suma_original - suma_redu
+nutrientes_a_compensar = pd.DataFrame([nutrientes_a_compensar.values], columns=nutrientes_a_compensar.index) #lo volteo
+
+#ahora debo encontrar 2 alimentos que esten en consumidores libres (y en tabla nutricional por supuesto)
+# que compensen esa reducciòn
+#pero, su valor (en pesos) tiene que ser menor al 50% del aumento de la carne, la carne aumentò un 41.48%
+aumento_carne = 41.48
+"""
+En este caso vamos a utilizar el dominio generado por ACP para lo siguiente.
+Consigna 7.-
+Proponer dos alimentos de la tabla 3 (consumidores libres)
+ que lleguen a reemplazar la
+disminuci´on del 18.5 % de la carne sin perder valor nutricional. 
+Corroborar con la tabla de metas de la OMS la dieta diaria obtenida.
+ Adem´as, se pone como restricci´on en la elecci´on, que el precio de los alimentos 
+de reemplazo debe ser menor al 50 % del aumento de la carne.
+"""
+#REESTRICCION
+#FILTRO PRIMERO POR LOS QUE CUMPLAN QUE SUS VALORES ESTAN POR DEBAJO DE LA MITAD PARA CUMPLIR LA COCMPENSACION
+# Encontrar alimentos sustitutos que compensen la diferencia de nutrientes
+#utilizo nutricional_filtrada, que tiene los alimentos para los que tenemos precios
+# Reiniciar los índices para ambos DataFrames
+nutricional_filtrada.reset_index(drop=True, inplace=True)
+nutrientes_a_compensar.reset_index(drop=True, inplace=True)
+
+#ya tenog los valores de nutrientes a compensar
+columnas_comparar = nutrientes_a_compensar.columns
+
+# Aplicamos el filtro
+# Aplicamos el filtro
+for columna in nutrientes_a_compensar.columns:
+    posibles_sustitutos = nutricional_filtrada[nutricional_filtrada[columna] < nutrientes_a_compensar[columna].iloc[0]]
