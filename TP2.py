@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 18 14:48:34 2024
+Created on Sun Jun 23 21:08:40 2024
 
-@author: Estudiante
+@author: Rocio
 """
 
 import pandas as pd
@@ -13,8 +12,7 @@ from sklearn.cluster import KMeans
 import seaborn as sns
 import matplotlib.colors as mcolors
 
-
-def normalizar_tabla_nutricional(tabla_nutricional):
+def estandarizar_tabla_nutricional(tabla_nutricional):
     """
     Dado un dataframe, llena los valores nulos con 0 y convierte los valores en
     miligramos a gramos.
@@ -25,19 +23,16 @@ def normalizar_tabla_nutricional(tabla_nutricional):
     tabla_nutricional.columns = tabla_nutricional.columns.str.replace('mg', 'gr', regex=True)
     return tabla_nutricional
 
-
 #Creamos dataframes con los datos en formato csv
 tabla_nutricional = pd.read_csv('tabla_nutricional.csv',delimiter= ';')
 consumidores_libres = pd.read_csv('consumidores_libres.csv' ,delimiter = ';')
 
-#Normalizamos la tabla
-tabla_nutricional = normalizar_tabla_nutricional(tabla_nutricional)
+#Estandarizamos la tabla
+tabla_nutricional = estandarizar_tabla_nutricional(tabla_nutricional)
 
-print('Tabla Nutricional', tabla_nutricional.head())
+print('Tabla Nutricional \n', tabla_nutricional.head(3))
 
-print('Consumidores Libres', consumidores_libres.head())
-
-
+print('Consumidores Libres \n', consumidores_libres.head(3))
 
 def evaluarCumplimiento_dieta_margenes(data):
     """
@@ -75,8 +70,6 @@ def evaluarCumplimiento_dieta_margenes(data):
 
     return 'Cumple los márgenes' if cumple else 'No cumple los márgenes'
 
-#Verificamos si la CBA cumple los márgenes de la OMS
-print(evaluarCumplimiento_dieta_margenes(tabla_nutricional))
 
 def componentes_principalesSVD(X, k):
     """
@@ -105,11 +98,10 @@ def componentes_principalesSVD(X, k):
     X_proyectado = X @ Vt_k @ R1
     return X_proyectado, Vt_k
 
+
 # Reducimos la dimensionalidad de los datos (X) mediante PCA
 matriz_nutricional = tabla_nutricional.iloc[:, 1:].values
 X_proyectado, Vt_2= componentes_principalesSVD(matriz_nutricional, 2)
-
-
 def graficarProyeccion(X_proyectado, alimentos, titulo, n_clusters=4):
     """
     Grafica los alimentos como puntos en el subespacio generado por las 2
@@ -137,38 +129,21 @@ def graficarProyeccion(X_proyectado, alimentos, titulo, n_clusters=4):
 
     return df_clusters
 
-def graficarProyeccion(X_proyectado, alimentos, titulo, n_clusters=4):
-    """
-    Grafica los alimentos como puntos en el subespacio generado por las 2
-    componentes principales, coloreando los puntos según sus clusters.
-    """
-    # Aplicamos KMeans para encontrar clusters
-    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X_proyectado)
-    labels = kmeans.labels_
-
-    # Crear DataFrame con el número de cluster y alimento
-    df_clusters = pd.DataFrame({
-        'Alimento': alimentos,
-        'Número de Cluster': labels,
-
-    })
-
-    plt.figure(figsize=(12, 8))
-    scatter = plt.scatter(X_proyectado[:, 0], X_proyectado[:, 1], c=labels, cmap='viridis', alpha=0.5)
-    plt.xlabel('Componente Principal 1')
-    plt.ylabel('Componente Principal 2')
-    plt.title(titulo)
-    plt.colorbar(scatter)
-    plt.grid(True)
-    plt.show()
-
-    return df_clusters
 # Graficamos la proyección con los clusters y obtenemos el DataFrame de clusters
 alimentos = tabla_nutricional['Alimento'].values
 
 df_clusters = graficarProyeccion(X_proyectado, alimentos, 'Análisis en Componentes Principales de la Canasta Básica')
 
 def graficos_cluster():
+    """
+    Genera gráficos de barras para visualizar el promedio de macronutrientes
+    (HC, proteínas, azúcares libres, grasas, y fibra) por cada grupo de
+    alimentos agrupados en cuatro clusters.
+
+    Parámetros:Ninguno.
+
+    Retorna: Muestra gráficos y realiza impresiones en pantalla.
+    """
 
     # Para el grupo 1
     grupo1 = df_clusters[df_clusters['Número de Cluster'] == 0]['Alimento'].tolist()
@@ -213,8 +188,7 @@ def graficos_cluster():
 
 
     for idx, macronutriente in enumerate(macronutrientes):
-        sns.barplot(ax=axes[idx], x='Número de Cluster', y=macronutriente, data=promedios_grupos, palette='viridis')
-
+        sns.barplot(ax=axes[idx], x='Número de Cluster', hue= 'Número de Cluster', y=macronutriente, data=promedios_grupos, palette='viridis', legend=False)
         axes[idx].set_title(f'Promedio de {macronutriente} por Cluster')
         axes[idx].set_xlabel('Número de Cluster')
         axes[idx].set_ylabel(macronutriente)
@@ -233,12 +207,6 @@ def graficos_cluster():
     print(f'cantidad de alimentos cluster 3: {cant3}')
     print(f'cantidad de alimentos cluster 4: {cant4}')
 
-graficos_cluster()
-#%%
-#################################
-#
-#AUMENTO DE PRECIOS
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
 
 def palabras_contenidas(nombre1, nombre2):
     """
@@ -287,169 +255,29 @@ def proyectar(Y, proyector):
     return Y_proyectado
 
 
+#filtramos los valores nutricionales para aquellos alimentos que tenemos precio
+nutricional_filtrada = filtrarAlimentos(consumidores_libres,tabla_nutricional)
+
+
 # Proyectamos los alimentos de consumidores_libres (Y) en el subespacio del PCA anterior
-Y = filtrarAlimentos(consumidores_libres, tabla_nutricional)
+Y = nutricional_filtrada
 alimentos2 = Y['Alimento'].values
 Y = Y.iloc[:,1:].values
 proyector =  Vt_2
 Y_proyectado = proyectar(Y, proyector)
 # Graficamos la proyección con los clusters y obtenemos el DataFrame de clusters
-df_clusters2 = graficarProyeccion(Y_proyectado, alimentos2, "Análisis de Componentes Principales de Alimentos de 'Consumidores Libres'")
+df_clusters_consumidores = graficarProyeccion(Y_proyectado, alimentos2, "Análisis de Componentes Principales de Alimentos de 'Consumidores Libres'")
 
-del df_clusters2
-#%%%%
-######
-######
-##    MINIMOS CUADRADOS
-######
-###############
-"""
-
-M´ınimos Cuadrados
-Consigna 5.- Aplicar M´ınimos Cuadrados sobre los precios de cada nutriente (HC,
-Prote´ınas y grasas) para evaluar el aumento en estos 4 meses. Graficar cada punto
-de cada alimento y la recta obtenida por M´ınimos Cuadrados. Hacer una tabla
-de los aumentos.
-
-"""
-# Convertimos los datos a np.array
-matriz_consumidores = consumidores_libres.iloc[:, 1:].values
-print(matriz_consumidores.shape)
-#no todos los alimentos se corresponden con todos, vamos a filtrar
-df= tabla_nutricional[['Alimento', 'Cantidad (gr/ml)', 'HC (gr)', 'Proteinas (gr)', 'Grasas (gr)','Fibra (gr)','Azucares Libres (gr)']]
-#ahora vamos a ir filtrando sobre los alimentos que tenemos informacion
-#consumidores_libres.rename(columns={"PRODUCTOS": "Alimento"}, inplace=True)
-#productos =consumidores_libres.iloc[:, 0] = consumidores_libres.iloc[:, 0].str.lower().str.capitalize()
-
-#tengo que aplicar sobre los precios de cada nutriente pero no tengo de todos, por eso filtro productos
-palabras= ['Aceite', 'Acelga','Arroz','Azucar','Carne picada','Fideos secos',
-                  'Harina trigo','Huevo','Leche fluida entera','Papa','Tomate','Asado','Cebolla',
-                  'Manzana','Naranja']
-palabras = [p.lower() for p in palabras]
-
-
-# Convertir todo a minúsculas para hacer la comparación insensible a mayúsculas y minúsculas
-df['Alimento'] = df['Alimento'].astype(str).str.lower()
-palabras = [p.lower() for p in palabras]
-consumidores_libres['PRODUCTOS'] = consumidores_libres['PRODUCTOS'].astype(str)
-
-# Filtrar filas de df donde alguna columna está incluida o es igual a alguna palabra en palabras
-filtrado_df = df[df.apply(lambda row: row.astype(str).str.lower().isin(palabras)).any(axis=1)]
-
-
-
-
-data = []
-for index, row in filtrado_df.iterrows():
-    aux = consumidores_libres[consumidores_libres['PRODUCTOS'].str.contains(row['Alimento'], case=False, na=False)]
-
-    if len(aux) > 0:
-        data.append([row['Alimento'],
-                     aux['PRODUCTOS'].iloc[0],
-                     aux['Cantidad'].iloc[0],
-                     aux['31/12/2023'].iloc[0],
-                     aux['31/1/2024'].iloc[0],
-                     aux['29/2/2024'].iloc[0],
-                     aux['31/3/2024'].iloc[0],
-                     aux['30/4/2024'].iloc[0]])
-
-# Crear un nuevo DataFrame con los datos recopilados
-df_resultado = pd.DataFrame(data, columns=['Alimento', 'Producto', 'Cantidad', '31/12/2023', '31/1/2024', '29/2/2024', '31/3/2024', '30/4/2024'])
-df_final = pd.merge(df_resultado, filtrado_df, on='Alimento', how='inner')
-# Mostrar el DataFrame resultante
-#AL FIN DIOS
-#ASI SE FESTEJA EN EL OBESLISCOOOOOOOOOOOO
-
-#MEJORAR CODIGO LUEGO
-
-#AHORA AGREGO LO QUE ME FALTA
-#aceite, leche
-
-
-#ahora aplico minimos cuadrados para predecir el aumento
-#quiero aplicarlo sobre el precio de cada nutriente
-#como tengo distintos precios para cada alimento y quiero para los nutrientes, saco la media
-#elimino las columnas alimento y prodcuto
-
-#%%
-
-#Los alimentos de tabla nutricional estàn parcialemente incluidas
-# para hacer la conversion a pesos, tengo en la columna cantidad de consumidores libres el peso en gramos 
-#EN CONSUMIDORES LIBRES TENGO LA RELACION PESO CANTIDAD
-#EN TABLA NUTRICIONAL TENGO LA RELACION CANTIDAD ALIMENTO --GRAMOS DE MACRONUTRIENTE
-#Entonces tendria que ir recorriendo productos, fijarme cual está en consumidores libres y luego hacer la regla de tres
-#         250gr fideos --------- 5gr de proteinas
-#        1000gr fideos ---------X = 20gr
-#LUEGO
-#
-#        1000gr fideos --------- $300
-#          20gr (proteinas)-------X = $6
-#
-
-#BASICAMENTE RECOLECTO LOS DATOS COMO DIJO MUY AMABLEMENTE PABLO :/
-
-#LISTO AMBOS
-
-alimentos = tabla_nutricional['Alimento'].values
-productos=consumidores_libres.iloc[:,0]
-
-#armo una funcion donde tomo ambas columnas y encuentro sus valores en la otra y operando matematicamente
-meses = ['Dic23','Enero24','Febrero24','Marzo24','Abril24'] # EJE X
-#obtengo los datos como dije, armo una matriz y 
-# # Graficamos
-# plt.scatter(datosNP[:,0], datosNP[:,1])
-
-#sigo la logica de palabras contenidas
-def palabras_contenidas(nombre1, nombre2):
-    """
-    Verifica si todas las palabras de una cadena (excepto casos excepcionales) están contenidas en otra cadena
-    o viceversa, retorna true si se cumple cualquiera de las dos condiciones,
-    de lo contrario, retorna false.
-
-    """
-    casos_excepcionales =['dulce de leche', 'harina maiz', 'leche entera en polvo', 'paleta cocida', 'tomate envasado', 'vina re']
-    if nombre1 not in casos_excepcionales:
-        palabras1 = nombre1.split()
-        for palabra in palabras1:
-            if palabra != 'en' and palabra != 'de' and palabra in nombre2:
-                return True
-    return
-
-def filtrarAlimentos(Y, X):
-    """
-    Recibe 2 dataframes de información de alimentos, compara sus primeras columnas
-    y devuelve los datos de X filtrados según sus alimentos que aparecen en Y.
-    """
-    # Convertimos los nombres a minúsculas para una comparación insensible a mayúsculas/minúsculas
-    X.iloc[:,0] = X.iloc[:,0].str.lower()
-    Y.iloc[:,0] = Y.iloc[:,0].str.lower()
-
-    # Guardamos los alimentos a filtrar
-    alimentos_Y = Y.iloc[:,0].tolist()
-
-    #Filtramos
-    filtro = X.iloc[:, 0].apply(lambda x: any(palabras_contenidas(x, alimento) for alimento in alimentos_Y))
-
-    return X[filtro]
-
-
-#aca me guardo la informacion de los alimentos que tengo en consumidores libres
-nutricional_filtrada = filtrarAlimentos(consumidores_libres,tabla_nutricional)
-#elimino berenjena
-# Eliminar la fila correspondiente a "berenjenas"
-consumidores_libres = consumidores_libres[consumidores_libres['PRODUCTOS'] != 'berenjenas']
-# data =[]
-
-
-
+#listamos las fechas
 meses = ['31/12/2023', '31/1/2024', '29/2/2024', '31/3/2024', '30/4/2024']
 
-# Inicializar diccionarios para almacenar los precios por gramos de cada nutriente
+# Inicializamos diccionarios para almacenar los precios por gramos de cada nutriente
 precios_hc = {}
 precios_proteinas = {}
 precios_grasas = {}
 precios_carne ={}
-ver = []
+
+#listamos casos excepcionales que quedan fuera al filtrar
 casos_excepcionales ={
         'aceite girasol': 'aceite cocinero girasol',
     'fideos secos': 'fideos guiseros',
@@ -458,170 +286,248 @@ casos_excepcionales ={
     'pan frances': 'pan fresco',
        }
 
-# Iterar sobre cada alimento en la tabla nutricional
+# Iteramos sobre cada alimento en la tabla nutricional
 for _, row in nutricional_filtrada.iterrows():
-    alimento = row['Alimento'] #agarra el alimento de tabla nutricional
-    cant_ali = row['Cantidad (gr/ml)'] #agarra la cantidad de ese alimento para ver proteina
-    gr_hc = row['HC (gr)']
-    gr_proteinas = row['Proteinas (gr)']
-    gr_grasas = row['Grasas (gr)']
-    # Buscar alimento en consumidores libres
+
+    alimento = row['Alimento'] #Toma el alimento de tabla nutricional
+
+    cant_ali = row['Cantidad (gr/ml)'] #Toma la cantidad de ese alimento para ver su composicion en nutriente
+
+    gr_hc = row['HC (gr)'] #toma su composición en gramos de carbohidratos
+
+    gr_proteinas = row['Proteinas (gr)'] #toma su composición en gramos de proteinas
+
+    gr_grasas = row['Grasas (gr)'] #toma su composición en gramos de grasas
+
+    # Buscamos alimento en consumidores libres
     if alimento in casos_excepcionales.keys():
        alimento =  casos_excepcionales[alimento]
-      
-    match = consumidores_libres[consumidores_libres['PRODUCTOS'].str.contains(alimento)]
-    if not match.empty: # para las coincidencias
-        cant_con_precio = match.iloc[0]['Cantidad'] #agarra la cantidad  para la cual tenemos precio
-        precios = match.iloc[0][meses].values
-        
-        # Calcular precios por gramo de nutriente
+
+    match = consumidores_libres[consumidores_libres['PRODUCTOS'].str.contains(alimento)] # utilizamos una sentencia match para comparar patrones y extraer componentes
+
+    if not match.empty: # evitamos operar con el producto 'yerba', ya que contiene 0 proteinas,grasas y hc
+
+        cant_con_precio = match.iloc[0]['Cantidad'] #guardamos la cantidad  para la cual tenemos precio
+
+        precios = match.iloc[0][meses].values #listamos los precios
+
+        # Calculamos precios por gramo de nutriente
         if gr_hc > 0:
             #aplico regla de tres
+
             x = (gr_hc*cant_con_precio)/cant_ali
+
             #ahora veo para los gramos dados
             y = (precios*x)/cant_con_precio
+
             #ahora saco para un gramo
             precio_hc = y/x
-            precios_hc[alimento] = precio_hc
+
+            precios_hc[alimento] = precio_hc #guardamos el precio obtenido
         if gr_proteinas > 0:
             #aplico regla de tres
+
             x = (gr_proteinas*cant_con_precio)/cant_ali
             #ahora veo para los gramos dados
+
             y = (precios*x)/cant_con_precio
             #ahora saco para un gramo
+
             precio_proteinas = y/x
+
             precios_proteinas[alimento] = precio_proteinas
         if gr_grasas > 0:
             #aplico regla de tres
+
             x = (gr_grasas*cant_con_precio)/cant_ali
             #ahora veo para los gramos dados
-            y = (precios*x)/cant_con_precio
-            #ahora saco para un gramo
-            precio_grasas = y/x
-            precios_grasas[alimento] = precio_grasas
- 
 
+            y = (precios*x)/cant_con_precio
+
+            #ahora saco para un gramo
+
+            precio_grasas = y/x
+
+            precios_grasas[alimento] = precio_grasas
+
+#convertimos en dataframes los diccioanrios obtenidos y trasponemos para una mejor organización.
 df_hc = pd.DataFrame(precios_hc, index=meses).T
 df_proteinas = pd.DataFrame(precios_proteinas, index=meses).T
 df_grasas = pd.DataFrame(precios_grasas, index=meses).T
 
-# Función para realizar la regresión lineal y graficar
-def regresion_y_grafico(df, titulo):
+
+def minimosCuadrados_grafico(df, titulo):
+    """
+    Genera un gráfico de precios originales y su interpolación por mínimos cuadrados
+    para diferentes alimentos a lo largo de cinco meses.
+
+    Parámetros:
+    df -- DataFrame donde las filas son alimentos y las columnas son los precios mensuales.
+    titulo -- Título del gráfico.
+    """
     plt.figure(figsize=(12, 8))
-    mes_indices = np.array([0, 1, 2, 3, 4])  # Asume que tienes 5 meses de datos
-    colors = list(mcolors.TABLEAU_COLORS.values())  # Lista de colores predefinidos
+    mes_indices = np.array([0, 1, 2, 3, 4])  #tomamos 5 fechas de datos
+    colors = list(mcolors.TABLEAU_COLORS.values())
 
     for i, alimento in enumerate(df.index):
-        precios = df.loc[alimento].values.astype(np.float64)  # Convertir a float64
-        
-        # Realizar la regresión lineal
+        precios = df.loc[alimento].values.astype(np.float64)  # Convertimos a float64
+
+        # Realizamos las ecuaciones normales
         A = np.vstack([mes_indices, np.ones(len(mes_indices))]).T
         ATA = A.T @ A
         ATy = A.T @ precios
-        
-        # Resolver el sistema de ecuaciones
+
+        # Resolvemos el sistema de ecuaciones
         coef = np.linalg.solve(ATA, ATy)
         m, b = coef
-        
-        # Seleccionar el color
+
+
         color = colors[i % len(colors)]
-        
-        # Graficar precios originales
+
+        # Graficamos precios originales
         plt.plot(mes_indices, precios, 'o', label=f'{alimento} (original)', color=color)
-        
-        # Graficar la línea de regresión
-        plt.plot(mes_indices, m * mes_indices + b, '-', label=f'{alimento} (regresión)', color=color)
-        
-        # Configurar etiquetas y título
+
+        # Graficamos la interpolacion por minimos cuadrados
+        plt.plot(mes_indices, m * mes_indices + b, '-', label=f'{alimento} (Interpolacion)', color=color)
+
         plt.xlabel('Meses')
         plt.ylabel('Precio por gramo de nutriente')
         plt.title(titulo)
     plt.grid(True)
-       
-    # Configurar la leyenda fuera del gráfico
+
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.xticks(mes_indices, ['Dic23', 'Ene24', 'Feb24', 'Mar24', 'Abr24'])
     plt.show()
 
-regresion_y_grafico(df_hc, 'Regresión Lineal de Precios por HC')
-regresion_y_grafico(df_proteinas, 'Regresión Lineal de Precios por Proteínas')
-regresion_y_grafico(df_grasas, 'Regresión Lineal de Precios por Grasas')
+
+minimosCuadrados_grafico(df_hc, 'Aplicación de Cuadrados mínimos para Precios por HC')
+
+minimosCuadrados_grafico(df_proteinas, 'Aplicación de Cuadrados mínimos para Precios por Proteínas')
+
+minimosCuadrados_grafico(df_grasas, 'Aplicación de Cuadrados mínimos para Precios por Grasas')
 
 def minimos_cuadrados(x, y):
+    """
+    Calcula los coeficientes de la línea de regresión lineal y = mx + b
+    utilizando el método de mínimos cuadrados.
+
+    Parámetros:
+    x -- vector de valores independientes
+    y -- vector de valores dependientes
+
+    Retorna:
+    m -- pendiente de la línea de regresión
+    b -- intersección con el eje y
+    """
     A = np.vstack([x, np.ones(len(x))]).T
     ATA = A.T @ A
     ATy = A.T @ y
-    
+
     # Resolver el sistema de ecuaciones
     coef = np.linalg.solve(ATA, ATy)
     m, b = coef
-    
+
     return m, b
 
-def grafico_promedio_nutrientes(grasas, hc, proteinas): 
+def grafico_promedio_nutrientes(grasas, hc, proteinas):
+    """
+    Genera un gráfico de dispersión con ajuste por mínimos cuadrados
+    para los precios promedio por gramo de grasas, carbohidratos (HC)
+    y proteínas a lo largo del tiempo.
+
+    Parámetros:
+    grasas -- DataFrame con los precios de grasas por productos
+    hc -- DataFrame con los precios de carbohidratos por productos
+    proteinas -- DataFrame con los precios de proteínas por productos
+    """
+
     precios_promedio_grasas = []
     precios_promedio_hc = []
     precios_promedio_proteinas = []
-    
+
     for fecha in meses:
         # Calcular el precio promedio por gramo de grasas
         precio_promedio_grasas = grasas[fecha].mean()
         precios_promedio_grasas.append(precio_promedio_grasas)
-               
+
                 # Calcular el precio promedio por gramo de HC
         precio_promedio_hc = hc[fecha].mean()
         precios_promedio_hc.append(precio_promedio_hc)
-               
+
                 # Calcular el precio promedio por gramo de proteínas
         precio_promedio_proteinas = proteinas[fecha].mean()
         precios_promedio_proteinas.append(precio_promedio_proteinas)
-    
+
     # Crear el gráfico de dispersión y ajuste por mínimos cuadrados
     plt.figure(figsize=(12, 8))
-    
+
     x = np.arange(len(meses))
     m, b = minimos_cuadrados(x, precios_promedio_grasas)
     plt.scatter(x, precios_promedio_grasas, label='Grasas', color='blue')
-    plt.plot(x, m * x + b, '-', label='Grasas (Regresión)', color='blue')
-    
+    plt.plot(x, m * x + b, '-', label='Grasas (Interpolación)', color='blue')
+
     m, b = minimos_cuadrados(x, precios_promedio_hc)
     plt.scatter(x, precios_promedio_hc, label='HC', color='green')
-    plt.plot(x, m * x + b, '-', label='HC (Regresión)', color='green')
-    
+    plt.plot(x, m * x + b, '-', label='HC (Interpolación)', color='green')
+
     m, b = minimos_cuadrados(x, precios_promedio_proteinas)
     plt.scatter(x, precios_promedio_proteinas, label='Proteínas', color='red')
-    plt.plot(x, m * x + b, '-', label='Proteínas (Regresión)', color='red')
-    
+    plt.plot(x, m * x + b, '-', label='Proteínas (Interpolación)', color='red')
+
     plt.xlabel('Fecha')
     plt.ylabel('Precio Promedio por Gramo de MacroNutriente')
     plt.title('Precio Promedio por Gramo de Macronutriente en funcion del tiempo')
     plt.xticks(x, meses, rotation=45)
     plt.legend()
     plt.grid(True)
-    
-   
-    plt.show()
-#veo si funca
-grafico_promedio_nutrientes(df_grasas, df_hc, df_proteinas)  
 
-#%%
+
+    plt.show()
+
+
+grafico_promedio_nutrientes(df_grasas, df_hc, df_proteinas)
+
+def minimos_cuadrados(x, y):
+    """
+    Calcula los coeficientes de la línea de regresión lineal y = mx + b
+    utilizando el método de mínimos cuadrados.
+
+    Parámetros:
+    x -- vector de valores independientes
+    y -- vector de valores dependientes
+
+    Retorna:
+    m -- pendiente de la línea de regresión
+    b -- intersección con el eje y
+    """
+    A = np.vstack([x, np.ones(len(x))]).T
+    ATA = A.T @ A
+    ATy = A.T @ y
+
+    # Resuelvo el sistema de ecuaciones
+    coef = np.linalg.solve(ATA, ATy)
+    m, b = coef
+
+    return m, b
+
 def calcular_aumentos(df):
-    mes_indices = np.array([0, 1, 2, 3, 4])  # Asume que tienes 5 meses de datos
+    mes_indices = np.array([0, 1, 2, 3, 4])  # Asume que tenes 5 meses de datos
     aumentos = {}
 
     for alimento in df.index:
-        precios = df.loc[alimento].values.astype(np.float64)  
-        
+        precios = df.loc[alimento].values.astype(np.float64)
+
         A = np.vstack([mes_indices, np.ones(len(mes_indices))]).T
         ATA = A.T @ A
         ATy = A.T @ precios
-        
+
         coef = np.linalg.solve(ATA, ATy)
         m, b = coef
-        
+
         aumentos[alimento] = m
 
     return aumentos
+
 
 aumentos_hc = calcular_aumentos(df_hc)
 aumentos_proteinas = calcular_aumentos(df_proteinas)
@@ -635,20 +541,27 @@ aumentos_grasas = pd.DataFrame(list(aumentos_grasas.items()), columns=['Alimento
 aumentos_nutrientes = pd.merge(aumentos_hc, aumentos_proteinas, on='Alimento', how='outer')
 aumentos_nutrientes = pd.merge(aumentos_nutrientes, aumentos_grasas, on='Alimento', how='outer')
 
-# Llenar NaN con 0
+
 aumentos_nutrientes = aumentos_nutrientes.fillna(0)
+print(aumentos_nutrientes.head())
 
 
-"""
-Consigna 6.- Comparar el aumento de la carne en comparaci´on con los otros
-rubros. Si la gente consume ese porcentaje menos de carne, como queda la ingesta
-individual con respecto a la tabla de metas de la OMS?"
-
-"""
 #utilizo aumentos para cada alimento de consumidores libres y luego hago grafiquito de barras
 #modifico calcular aumento para poder usarla con consumidores libres
 
 def calcular_aumentos_productos(df):
+    """
+    Calcula la tasa de aumento de precios de diferentes alimentos
+    utilizando el método de mínimos cuadrados a lo largo de cinco meses.
+
+    Parámetros:
+    df -- DataFrame donde las filas son alimentos y las columnas son
+          los precios mensuales.
+
+    Retorna:
+    aumentos -- Diccionario con la tasa de aumento de precios para
+                cada alimento.
+    """
     mes_indices = np.array([0, 1, 2, 3, 4])  # Asume que tienes 5 meses de datos
     aumentos = {}
 
@@ -666,10 +579,12 @@ def calcular_aumentos_productos(df):
 
     return aumentos
 
+# Calcular los aumentos
 aumentos_productos = calcular_aumentos_productos(consumidores_libres)
 aumentos_productos = pd.DataFrame(list(aumentos_productos.items()), columns=['Productos', 'Aumento'])
 print(aumentos_productos.head())
 
+# ordenamos para una mejor visualizacion
 aumentos_productos = aumentos_productos.sort_values(by='Aumento', ascending=False)
 carnes = ['asado','bola de lomo','carne picada comun','paleta']
 
@@ -678,23 +593,30 @@ plt.figure(figsize=(12, 8))
 colores = ['purple' if producto not in carnes else 'green' for producto in aumentos_productos['Productos']]
 
 plt.barh(aumentos_productos['Productos'], aumentos_productos['Aumento'], color=colores)
-plt.xlabel('Aumento')
+plt.xlabel('Aumento (AR$)')
 plt.ylabel('Producto')
-plt.title('Aumento de Productos con Cuadrados Minimos vs Alimento')
+plt.title('Aumento de Precios de Productos Calculado con Mínimos Cuadrados ')
 plt.grid(True)
 plt.show()
-
-
-
-#%%
-
 def calcular_aumento_porcentual(df, fecha_inicio, fecha_fin):
+    """
+    Calcula el aumento porcentual de precios de productos dadas dos fechas
+
+    Parámetros:
+    df -- DataFrame que contiene los precios de los productos en diferentes fechas.
+    fecha_inicio -- La fecha de inicio como una cadena en el formato 'dd/mm/yyyy'.
+    fecha_fin -- La fecha de fin como una cadena en el formato 'dd/mm/yyyy'.
+
+    Retorna:
+    df_resultado -- DataFrame con los productos y su correspondiente aumento porcentual de precio
+                    entre las dos fechas dadas
+    """
     # Calcula el aumento porcentual para cada fila entre las columnas especificadas
     df['Aumento %'] = ((df[fecha_fin] - df[fecha_inicio]) / df[fecha_inicio]) * 100
-    
+
     # Crea un nuevo DataFrame solo con las columnas 'PRODUCTOS' y 'Aumento %'
     df_resultado = df[['PRODUCTOS', 'Aumento %']].copy()
-    
+
     return df_resultado
 
 aumento_porcentual_productos = calcular_aumento_porcentual(consumidores_libres.copy(), '31/12/2023', '30/4/2024')
@@ -704,38 +626,49 @@ aumento_porcentual_productos = aumento_porcentual_productos.sort_values(by='Aume
 carnes = ['asado', 'bola de lomo', 'carne picada comun', 'paleta']
 
 plt.figure(figsize=(12, 8))
-colores = ['green' if producto not in carnes else 'lightblue' 
+colores = ['green' if producto not in carnes else 'lightblue'
            for producto in aumento_porcentual_productos['PRODUCTOS']]
 plt.barh(aumento_porcentual_productos['PRODUCTOS'], aumento_porcentual_productos['Aumento %'], color=colores)
 plt.xlabel('Aumento %')
 plt.ylabel('Producto')
-plt.title('Aumento porcentual de Productos vs Alimento')
+plt.title('Aumento porcentual de Productos en el periodo Diciembre 2023- Abril 2024')
 plt.grid(True)
 plt.show()
 
-#%%
-
-#%%
-
-"""
-Si la gente consume ese porcentaje menos de carne, como queda la ingesta
-individual con respecto a la tabla de metas de la OMS?"
-"""
-#extraigo el porcentaje de aumentos de la carne
 carnes = ['asado', 'bola de lomo', 'carne picada','paleta ']
 
-# Filtrar el DataFrame para los alimentos en la lista 'carnes'
+
 carnes_df = nutricional_filtrada[nutricional_filtrada['Alimento'].isin(carnes)]
 
+columnas = nutricional_filtrada.columns
+carnes_nutrientes = carnes_df[columnas]
 
-carnes = ['asado', 'bola de lomo', 'carne picada comun','paleta ']
+columnas_interes = ['Alimento', 'Cantidad (gr/ml)','HC (gr)', 'Proteinas (gr)',
+       'Grasas (gr)']
+carnes_nutrientes_seleccionado = carnes_nutrientes[columnas_interes]
+print(carnes_nutrientes_seleccionado)
 
-#extraigo el porcentaje 
+
+ #extraigo el porcentaje
 carnes_porcentaje = aumento_porcentual_productos[aumento_porcentual_productos['PRODUCTOS'].isin(carnes)]
 resultado = carnes_porcentaje['Aumento %'].mean()
+
 print(f'El porcentaje de aumento de la carne es: {resultado.round(2)}%')
 
-#%%
+# Ordenar el DataFrame por la columna 'Proteinas' en orden descendente
+df_ordenado = nutricional_filtrada.sort_values(by='Proteinas (gr)', ascending=False)
+
+# Seleccionar las columnas 'HC (gr)', 'Proteinas (gr)' y 'Grasas (gr)'
+df_seleccionado = df_ordenado[['Alimento','HC (gr)', 'Proteinas (gr)', 'Grasas (gr)']]
+
+# Mostrar los primeros cinco elementos
+df_seleccionado.head()
+
+df_ordenado = nutricional_filtrada.sort_values(by='Grasas (gr)', ascending=False)
+
+df_seleccionado = df_ordenado[['Alimento','HC (gr)', 'Proteinas (gr)', 'Grasas (gr)']]
+
+df_seleccionado.head()
 
 # Lista de nombres de carne con porcentaje
 carnes = ['asado', 'bola de lomo', 'carne picada comun', 'paleta']
@@ -747,8 +680,6 @@ similares = {'carne picada comun': 'carne picada '}
 
 # Extraer el porcentaje de aumento para los productos de carne
 carnes_porcentaje = aumento_porcentual_productos[aumento_porcentual_productos['PRODUCTOS'].isin(carnes)]
-resultado = carnes_porcentaje['Aumento %'].mean()
-print(f'El porcentaje de aumento de la carne es: {resultado.round(2)}%')
 
 # Crear una copia de la tabla nutricional reducida
 cba_reducida = tabla_nutricional.copy()
@@ -757,18 +688,18 @@ cba_reducida = tabla_nutricional.copy()
 for index, row in carnes_porcentaje.iterrows():
     alimento = row['PRODUCTOS']
     aumento_porcentaje = row['Aumento %']
-    
+
     # Verificar si el alimento está en el diccionario de nombres similares
     if alimento in similares:
         alimento = similares[alimento]
-    
+
     # Buscar el alimento en cba_reducida y aplicar la reducción
     mask = cba_reducida['Alimento'].str.strip() == alimento.strip()
-    
+
     if mask.any():
         # Calcular el factor de reducción
         factor_reduccion = (100 - aumento_porcentaje) / 100.0
-        
+
         # Reducir los valores en las columnas relevantes
         cba_reducida.loc[mask, 'Cantidad (gr/ml)'] *= factor_reduccion
         cba_reducida.loc[mask, 'HC (gr)'] *= factor_reduccion
@@ -784,105 +715,59 @@ for index, row in carnes_porcentaje.iterrows():
         cba_reducida.loc[mask, 'Fibra (gr)'] *= factor_reduccion
 
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%
-#        CONSIGNA 7 
- 
+print('Vemos como quedan los margenes al reducir el consumo')
+print('*'*50)
+evaluarCumplimiento_dieta_margenes(cba_reducida)
+print('+'*50)
+print('*'*50)
+print('Comparamos con los margenes de la tabla original')
+evaluarCumplimiento_dieta_margenes(tabla_nutricional)
+print('*'*50)
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+df_clusters_consumidores = graficarProyeccion(Y_proyectado, alimentos2, "Análisis de Componentes Principales de Alimentos de 'Consumidores Libres'")
+
+
+nro_cluster = df_clusters_consumidores.loc[df_clusters_consumidores['Alimento'] == 'asado','Número de Cluster'].values[0]
+
+# Filtrar los alimentos que pertenecen al mismo clúster
+alimentos_mismo_cluster = df_clusters_consumidores[df_clusters_consumidores['Número de Cluster'] == nro_cluster]
+
+#me fije y las demas carnes estan en el mismo cluster, justificar bien
 """
-En este caso vamos a utilizar el dominio generado por ACP para lo siguiente.
-Consigna 7.-
-Proponer dos alimentos de la tabla 3 (consumidores libres)
- que lleguen a reemplazar la
-disminuci´on del 18.5 % de la carne sin perder valor nutricional. 
-Corroborar con la tabla de metas de la OMS la dieta diaria obtenida.
- Adem´as, se pone como restricci´on en la elecci´on, que el precio de los alimentos 
-de reemplazo debe ser menor al 50 % del aumento de la carne.
+ En este caso vamos a utilizar el dominio generado por ACP para lo siguiente.
+ Consigna 7.- Proponer dos alimentos de la tabla 3 que lleguen a reemplazar la
+ disminuci´on del 18.5% de la carne sin perder valor nutricional. Corroborar con
+ la tabla de metas de la OMS la dieta diaria obtenida. Adem´ as, se pone como
+ restricci´on en la elecci´on, que el precio de los alimentos de reemplazo debe ser
+ menor al 50% del aumento de la carne
 """
+#ahora filtramos por los que se encuentran bajo el 50% de aumento de la carne
+# cuanto aumentó la carne?
 
-#como tengo que usar la tabla tres(lad e consumidores libres, utilizo nutricional_filtrada)
-#la proyecto en acp
-#trabajo con df_clusters
+# carnes_porcentaje = aumento_porcentual_productos[aumento_porcentual_productos['PRODUCTOS'].isin(carnes)]
+# resultado = carnes_porcentaje['Aumento %'].mean()
 
-"""
-hacer el 18.5 porceinto de los valores nutricionales que aporta la carne y ver
-que alimentos pueden reemplazar esa cantidad
+# print(f'El porcentaje de aumento de la carne es: {resultado.round(2)}%')
 
-tomar el porcetnaje del porcetaje
-agarras el precio de la carne, ves cuanto es el 41,47 y del resultado tomo el 50%
-filtro los alimentos cuyo precio este debajo de eso y hago un segundo filtro con los que tengan los valores nutriiconales necesarios
-el acp reduce los valores nutriiconales que tomamos
-"""
+#la carne aumento:
+carne_aumento = resultado.round(2)
+#41,52 se que quiero los alimentos cuyo aumento es menor a la mitad de aumento de la carne,
+#paso a pesos el aumento, restando el primer mes con el ultimo
+#agrego una columns mas aumento porcentual productos que sea la diferncia entre la primer columnas y la ultima de consumidores libre
 
-"""
-Consigna 7: Reemplazo dietario de la carne
-Objetivo: Proponer dos alimentos de la tabla 3 que reemplacen la disminución del 18.5% del consumo de carne sin perder valor nutricional, y que el precio de estos alimentos sea menor al 50% del aumento de la carne.
+consumidores_libres['Aumento $'] = consumidores_libres['30/4/2024'] - consumidores_libres['31/12/2023']
 
-Pasos:
+# Fusionar los DataFrames aumento_porcentual_productos y consumidores_libres
+aumento_porcentual_productos = pd.merge(aumento_porcentual_productos, consumidores_libres[['PRODUCTOS', 'Aumento $']], on='PRODUCTOS')
 
-Calcular la disminución del consumo de carne:
-   18.5% menos de carne (por ejemplo, si originalmente consumías 1000g de carne, ahora consumirías 815g).
-Determinar la cantidad de nutrientes que se dejan de consumir:
-    
-Calcular los nutrientes que aporta la cantidad de carne que se dejará de consumir.
-Buscar alimentos de reemplazo en la tabla 3:
-Seleccionar alimentos que aporten nutrientes similares a los que se pierden por la reducción de carne.
-Asegurarse que el costo de los alimentos seleccionados sea menor al 50% del aumento del precio de la carne.
-4.Verificar la dieta diaria obtenida con la tabla de metas de la OMS:
-Asegurarse que la nueva combinación de alimentos cumple con las metas nutricionales diarias.
-"""
+#ahora sumo cuanto aumentò la carne, para ello unifico las carnes
 
-# Lista de nombres de carne con porcentaje
-carnes = ['asado', 'bola de lomo', 'carne picada', 'paleta ']
-
-# primero disminuyo un 18,5 porciento  la carne
+#carnes = ['asado', 'bola de lomo', 'carne picada comun', 'paleta']
+#unifico carnes en el df de 
 
 
 
-df_nutricional_carne_redu = tabla_nutricional.copy()
 
-# Iterar sobre cada alimento en la lista
-for carne in carnes:
-    mask = df_nutricional_carne_redu['Alimento'].str.contains(carne, case=False, regex=False)
-    df_nutricional_carne_redu.loc[mask, df_nutricional_carne_redu.columns[1:]] *= 0.815
 
-#ahora veamos cuanto es la diferencia de nutrientes al hacer esta disminucion
-mask_original = tabla_nutricional['Alimento'].str.contains('|'.join(carnes), case=False, regex=True)
-mask_redu = df_nutricional_carne_redu['Alimento'].str.contains('|'.join(carnes), case=False, regex=True)
-
-# Sumar los valores de cada columna para los alimentos de la lista 'carnes' en ambos DataFrames :)
-suma_original = nutricional_filtrada.loc[mask_original, nutricional_filtrada.columns[1:]].sum()
-suma_redu = df_nutricional_carne_redu.loc[mask_redu, df_nutricional_carne_redu.columns[1:]].sum()
-
-# Calcular la diferencia
-#VEMOS CUANTO MENOS SE CONSUME
-nutrientes_a_compensar= suma_original - suma_redu
-nutrientes_a_compensar = pd.DataFrame([nutrientes_a_compensar.values], columns=nutrientes_a_compensar.index) #lo volteo
-
-#ahora debo encontrar 2 alimentos que esten en consumidores libres (y en tabla nutricional por supuesto)
-# que compensen esa reducciòn
-#pero, su valor (en pesos) tiene que ser menor al 50% del aumento de la carne, la carne aumentò un 41.48%
-aumento_carne = 41.48
-"""
-En este caso vamos a utilizar el dominio generado por ACP para lo siguiente.
-Consigna 7.-
-Proponer dos alimentos de la tabla 3 (consumidores libres)
- que lleguen a reemplazar la
-disminuci´on del 18.5 % de la carne sin perder valor nutricional. 
-Corroborar con la tabla de metas de la OMS la dieta diaria obtenida.
- Adem´as, se pone como restricci´on en la elecci´on, que el precio de los alimentos 
-de reemplazo debe ser menor al 50 % del aumento de la carne.
-"""
-#REESTRICCION
-#FILTRO PRIMERO POR LOS QUE CUMPLAN QUE SUS VALORES ESTAN POR DEBAJO DE LA MITAD PARA CUMPLIR LA COCMPENSACION
-# Encontrar alimentos sustitutos que compensen la diferencia de nutrientes
-#utilizo nutricional_filtrada, que tiene los alimentos para los que tenemos precios
-# Reiniciar los índices para ambos DataFrames
-nutricional_filtrada.reset_index(drop=True, inplace=True)
-nutrientes_a_compensar.reset_index(drop=True, inplace=True)
-
-#ya tenog los valores de nutrientes a compensar
-columnas_comparar = nutrientes_a_compensar.columns
-
-# Aplicamos el filtro
-# Aplicamos el filtro
-for columna in nutrientes_a_compensar.columns:
-    posibles_sustitutos = nutricional_filtrada[nutricional_filtrada[columna] < nutrientes_a_compensar[columna].iloc[0]]
