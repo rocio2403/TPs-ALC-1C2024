@@ -766,7 +766,30 @@ aumento_porcentual_productos = pd.merge(aumento_porcentual_productos, consumidor
 
 #carnes = ['asado', 'bola de lomo', 'carne picada comun', 'paleta']
 #unifico carnes en el df de 
+#%%
 
+carnes_precio = aumento_porcentual_productos[aumento_porcentual_productos['PRODUCTOS'].isin(carnes)]
+limite_precio = carnes_precio['Aumento $'].mean()
+
+print(limite_precio)
+
+#en promedio la carne aumentó 2200 pesos, 
+#asi que sacamos cuales alimentos estan por debajo de la mitad de ese aumento
+#filtramos por limite_precio/2
+alimentos_mismo_cluster['Alimento'] = alimentos_mismo_cluster['Alimento'].replace({
+    'huevo': 'huevos color docena',
+    'zanahoria': 'zanahorias'
+})
+#%%
+alimentos_mismo_cluster=filtrarAlimentos(alimentos_mismo_cluster, aumento_porcentual_productos)
+# alimentos_mismo_cluster = pd.merge(alimentos_mismo_cluster, aumento_porcentual_productos,
+#                                     left_on='Alimento', right_on='PRODUCTOS', how='left')
+
+# # Eliminar la columna redundante 'PRODUCTOS'
+# alimentos_mismo_cluster.drop(columns=['PRODUCTOS'], inplace=True)
+
+#ahora nos quedamos con aquellos alimentos bajo el limite
+posibles_sustitutos = alimentos_mismo_cluster[alimentos_mismo_cluster['Aumento $'] <= limite_precio/2]
 
 
 
